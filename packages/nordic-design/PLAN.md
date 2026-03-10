@@ -34,21 +34,21 @@ We need to build a web application where students can create custom chatbots mod
   ├── chat/
   │   └── POST        // Process user message → return chatbot response
   │
-  └── image-upload/
-      └── POST        // Handle image upload, return URL/path
+  └── professors/
+      └── init/         // Initialize professors.json index
 ```
 
 ### Data Storage
 
-- **Professors metadata:** JSON file in Vercel storage (`/data/professors.json`)
+- **Professors metadata:** JSON file in Vercel storage (`professors.json`)
   ```json
   [
     {
       "id": "uuid",
       "name": "Jane Doe",
       "field": "Industrial & Product Design",
-      "imagePath": "/images/professors/uuid.jpg",
-      "corpusPath": "/corpora/professors/uuid.json",
+      "image": "https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/images/professors/...",
+      "corpus": "https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/corpora/...",
       "createdAt": "2026-03-10T..."
     }
   ]
@@ -76,35 +76,29 @@ We need to build a web application where students can create custom chatbots mod
    - Add `@vercel/blob` to dependencies
    - Configure `BLOB_READ_WRITE_TOKEN` in `.env.local`
 
-2. **Implement `/api/professors` routes**
-   - `GET /api/professors` — return JSON array of all professors from Blob
-   - `POST /api/professors` — create professor, generate UUID, upload image and corpus to Blob
-     - Accepts FormData with: name, field, image (optional)
+2. **Initialize professors.json**
+   - `GET /api/professors/init` — create empty `professors.json` in Blob with `addRandomSuffix: false`
+   - Hardcoded URL stored in `listProfessors()` for fetching the index
 
-3. **Implement `/api/professors/[id]` routes**
+3. **Implement `/api/professors` routes**
+   - `GET /api/professors` — return JSON array of all professors from Blob (using hardcoded URL)
+   - `POST /api/professors` — create professor with `bodyParser: false` + `busboy` for FormData parsing
+     - Upload image to `images/professors/{safeName}.ext`
+     - Upload corpus to `corpora/{professorId}.json`
+     - Store `corpus` URL in professor object
+     - Append to `professors.json` index
+     - Response includes `image` and `corpus` URLs (full Blob URLs, not paths)
+
+4. **Implement `/api/professors/[id]` routes**
    - `GET /api/professors/[id]` — return professor + corpus from Blob
    - `PUT /api/professors/[id]` — save updated corpus to Blob
 
-4. **Implement `/api/chat` route**
-   - Accept JSON with `{ professorId, message, locale }`
-   - Load professor's corpus from Blob
-   - Initialize NLP.js with that corpus
-   - Return chatbot response
-
-3. **Implement `/api/professors/[id]` routes**
-   - `GET /api/professors/[id]` — return professor + corpus
-   - `PUT /api/professors/[id]` — save updated corpus
-
-4. **Implement `/api/chat` route**
+5. **Implement `/api/chat` route**
    - Accept `{ professorId, message, locale }`
-   - Load professor's corpus
+   - Fetch professor from `professors.json`
+   - Load corpus from `professor.corpus` URL (Blob returns full URL from `put()`)
    - Initialize NLP.js with that corpus
    - Return chatbot response
-
-5. **Add image upload handler** (`/api/image-upload`)
-   - Accept multipart form data
-   - Save to `/public/images/professors/[professorId].jpg`
-   - Return URL path
 
 ---
 
@@ -133,11 +127,12 @@ The corpus is now stored in Vercel Blob. We need to:
 
 1. **`/public/index.html`** - Professor listing + create form
    - `GET /api/professors` → render list of existing professors
-   - Form to create new professor:
+   - Form to create new professor (multipart/form-data with `busboy` on backend):
      - Name input
      - Field dropdown (10 options from DESIGN.md)
-     - Image upload → POST to `/api/image-upload`
+     - Image upload → POST to `/api/professors`
      - Submit → POST to `/api/professors`
+     - Response includes `image` and `corpus` URLs (full Blob URLs)
 
 2. **`/public/professors.html`** - Professor profile + corpus editor
    - `GET /api/professors/[id]` → load professor + corpus from Blob
@@ -216,6 +211,14 @@ Create `vercel.json` in the package root:
 
 ---
 
+## Key Constraints (Vercel Blob Limitations)
+
+- **No `get()` function** — only `put()` returns a URL, which must be used for subsequent fetching
+- **No `fetch()` on server-side** — use `@vercel/blob` `get()` equivalent via `fetch(blobUrl)` on the stored URL
+- **FormData parsing** — `req.formData()` not available; set `bodyParser: false` and use `busboy` instead
+
+---
+
 ## Future Enhancements (Out of Scope)
 
 - Multi-language support (`lang-fi`, `lang-sv`, `lang-nb`)
@@ -231,9 +234,11 @@ Create `vercel.json` in the package root:
 
 All data is stored in Vercel Blob (cloud storage):
 
-- **Professors:** `professors.json` (master index)
-- **Corpora:** `corpora/{professorId}.json` (per professor)
-- **Images:** `images/professors/{safeName}.ext` (per professor)
+- **Professors:** `professors.json` (master index, public URL)
+- **Corpora:** `corpora/{professorId}.json` (per professor, full URL returned from `put()`)
+- **Images:** `images/professors/{safeName}.ext` (per professor, full URL returned from `put()`)
+
+**Important:** Vercel Blob's `put()` returns a full URL (not a path). We store these URLs directly in `professors.json` and use them to fetch corpora via `fetch()` (no `get()` function available).
 
 ## Frontend (HTML)
 
@@ -250,6 +255,7 @@ All data is stored in Vercel Blob (cloud storage):
 - **Workspace:** `/home/nixos/.openclaw/workspace/projects/nlp.js`
 - **Push target:** `git@github.com:Avnerus/nlp.js.git`
 - **Blob storage:** `vercel_blob_rw_0tq3xJdZh1emKCko_poIWDphXoScx6cxoRx7xFOu8FiHPl5`
+- **Hardcoded index URL:** `https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/professors.json`
 
 ---
 
