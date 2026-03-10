@@ -1,19 +1,15 @@
-const { createNlp } = require('../src/nlp-engine');
-const fs = require('fs').promises;
-const path = require('path');
-const cors = require('cors');
+import { createNlp } from './nlp-engine.js';
+import { readFile, writeFile } from 'fs/promises';
+import path from 'path';
 
-// Enable CORS for all origins (Vercel serverless function)
-const corsMiddleware = cors();
-
-async function processChat(professorId, message, locale = 'en') {
+export async function processChat(professorId, message, locale = 'en') {
   const dataDir = path.join(__dirname, '..', 'data');
   const professorsFile = path.join(dataDir, 'professors.json');
   
   // Read professors index
   let professors = [];
   try {
-    const data = await fs.readFile(professorsFile, 'utf8');
+    const data = await readFile(professorsFile, 'utf8');
     professors = JSON.parse(data);
   } catch (err) {
     if (err.code !== 'ENOENT') throw err;
@@ -26,14 +22,15 @@ async function processChat(professorId, message, locale = 'en') {
   }
   
   // Load corpus
-  const corpusPath = path.join(__dirname, '..', 'data', 'corpora', `${professorId}.json`);
+  const corpusPath = path.join(dataDir, 'corpora', `${professorId}.json`);
   let nlp;
   try {
     nlp = await createNlp(corpusPath, locale);
   } catch (err) {
     // Fallback to default corpus if custom corpus fails
     console.warn(`Failed to load custom corpus for ${professorId}, using default`);
-    nlp = await createNlp(path.join(__dirname, '..', 'corpus-en.json'), locale);
+    const templatePath = path.join(__dirname, '..', 'corpus-en.json');
+    nlp = await createNlp(templatePath, locale);
   }
   
   // Process message
@@ -44,5 +41,3 @@ async function processChat(professorId, message, locale = 'en') {
     response
   };
 }
-
-module.exports = { processChat };

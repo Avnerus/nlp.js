@@ -1,18 +1,15 @@
-const fs = require('fs').promises;
-const path = require('path');
+import { readFile, writeFile } from 'fs/promises';
+import path from 'path';
 
-// Copy corpus template to data/corpora
-async function setupInitialCorpus(professorId) {
+export async function setupInitialCorpus(professorId) {
   const templatePath = path.join(__dirname, '..', 'corpus-en.json');
   const corporaDir = path.join(__dirname, '..', 'data', 'corpora');
   const corpusPath = path.join(corporaDir, `${professorId}.json`);
   
-  await fs.mkdir(corporaDir, { recursive: true });
+  const template = await import(templatePath);
   
-  const template = require(templatePath);
-  await fs.writeFile(corpusPath, JSON.stringify(template, null, 2));
+  await writeFile(corporaDir, { recursive: true });
+  await writeFile(corpusPath, JSON.stringify(template, null, 2));
   
   return corpusPath;
 }
-
-module.exports = { setupInitialCorpus };

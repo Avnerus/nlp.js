@@ -1,4 +1,5 @@
 import { get } from '@vercel/blob';
+import path from 'path';
 
 export default async function handler(req, res) {
   // Enable CORS
@@ -47,27 +48,9 @@ export default async function handler(req, res) {
     }
     
     // Load NLP
-    const { dockStart } = require('@nlpjs/basic');
-    const dock = await dockStart();
-    const nlp = dock.get('nlp');
+    const { createNlp } = await import('../src/nlp-engine.js');
+    const nlp = await createNlp(corpus, locale);
     
-    // Load corpus and add intents
-    for (const item of corpus.data) {
-      const { intent, utterances, answers } = item;
-      
-      for (const utterance of utterances) {
-        nlp.addDocument(locale, utterance, intent);
-      }
-      
-      if (Array.isArray(answers)) {
-        for (const answerObj of answers) {
-          const answer = typeof answerObj === 'string' ? answerObj : answerObj.answer;
-          nlp.addAnswer(locale, intent, answer);
-        }
-      }
-    }
-    
-    await nlp.train();
     const response = await nlp.process(locale, message);
     
     res.status(200).json(response);

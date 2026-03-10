@@ -1,4 +1,5 @@
-import { get, put } from '@vercel/blob';
+import { get } from '@vercel/blob';
+import path from 'path';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {

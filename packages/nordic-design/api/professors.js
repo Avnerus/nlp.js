@@ -47,7 +47,7 @@ async function createProfessor(req, res) {
     }
     
     const templatePath = path.join(__dirname, '..', 'corpus-en.json');
-    const template = require(templatePath);
+    const template = await import(templatePath);
     const newId = `prof_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     await put(`corpora/${newId}.json`, JSON.stringify(template, null, 2), { 
