@@ -54,33 +54,31 @@ We need to build a web application where students can create custom chatbots mod
   ]
   ```
 
-- **Corpora:** Each professor has their own `corpus-*.json` based on the template in `corpus-en.json`
-- **Images:** Stored in `/public/images/professors/` (Vercel public folder)
+- **Corpora:** Stored in Vercel Blob (`corpora/` prefix)
+- **Images:** Stored in Vercel Blob (`images/professors/` prefix)
 
 ### Frontend (Static Pages)
 
 ```
-/pages/
-  ├── index.jsx           // Professor listing + create form
-  ├── professors/[id].jsx // Professor profile + corpus editor
-  ├── chat/[id].jsx       // Chat interface
-  └── _app.jsx            // Global wrapper
+/public/
+  ├── index.html          // Professor listing + create form
+  ├── professors.html     // Professor profile + corpus editor
+  ├── chat.html           // Chat interface
 ```
 
 ---
 
 ## Implementation Steps
 
-### Phase 1: Backend Infrastructure
+### Phase 1: Backend Infrastructure (Blob-based)
 
-1. **Create `/data` and `/public` directories** in the package
-   - `/data/professors.json` — master index
-   - `/public/images/professors/` — professor avatars
-   - `/public/corpora/professors/` — dynamic corpora (optional, can be same as data)
+1. **Install Vercel Blob SDK**
+   - Add `@vercel/blob` to dependencies
+   - Configure `BLOB_READ_WRITE_TOKEN` in `.env.local`
 
 2. **Implement `/api/professors` routes**
-   - `GET /api/professors` — return JSON array of all professors
-   - `POST /api/professors` — create professor, generate UUID, save metadata
+   - `GET /api/professors` — return JSON array of all professors from Blob
+   - `POST /api/professors` — create professor, generate UUID, upload to Blob
 
 3. **Implement `/api/professors/[id]` routes**
    - `GET /api/professors/[id]` — return professor + corpus
@@ -101,22 +99,11 @@ We need to build a web application where students can create custom chatbots mod
 
 ### Phase 2: NLP.js Integration
 
-The current `index.js` is just a placeholder. We need to:
+The corpus is now stored in Vercel Blob. We need to:
 
-1. **Create `src/nlp-engine.js`** — reusable NLP engine factory
-
-   ```javascript
-   const { dockStart } = require('@nlpjs/basic');
-   
-   async function createNlp(corpusPath, locale = 'en') {
-     const dock = await dockStart();
-     const nlp = dock.get('nlp');
-     
-     // Load corpus dynamically
-     const corpus = require(corpusPath);
-     // Apply corpus to NLP manager...
-     
-     await nlp.train();
+1. **Use `src/nlp-engine.js`** — reusable NLP engine factory that loads corpus from Blob
+2. **Modify `/api/chat`** to load corpus from Blob using `get()` from `@vercel/blob`
+3. **Test locally** with `vercel dev`
      return nlp;
    }
    
@@ -141,13 +128,13 @@ The current `index.js` is just a placeholder. We need to:
      - Image upload → POST to `/api/image-upload`
      - Submit → POST to `/api/professors`
 
-2. **Create `/pages/professors/[id].jsx`**
-   - `GET /api/professors/[id]` → load professor + corpus
+2. **`/public/professors.html`** - Professor profile + corpus editor
+   - `GET /api/professors/[id]` → load professor + corpus from Blob
    - JSON editor (Ace Editor or CodeMirror)
    - "Save" button → `PUT /api/professors/[id]`
    - "Test Chatbot" link → `/chat.html?id=[id]`
 
-3. **Create `/pages/chat/[id].jsx`**
+3. **`/public/chat.html`** - Chat interface
    - Render professor image/name at top
    - Chat UI (input + message list)
    - `POST /api/chat` with `{ professorId, message }`
@@ -190,8 +177,8 @@ The `corpus-en.json` template should be the base for all professors. We need:
     "@nlpjs/lang-en": "^4.26.1",
     "@nlpjs/logger": "^4.26.1",
     "@nlpjs/nlp": "^4.27.0",
-    "cors": "^2.8.5",           // For Vercel API routes
-    "busboy": "^1.6.0"          // For image upload parsing
+    "@vercel/blob": "^0.23.0",
+    "cors": "^2.8.5"           // For Vercel API routes
   }
 }
 ```
@@ -229,11 +216,22 @@ Create `vercel.json` in the package root:
 
 ---
 
+## Vercel Blob Storage
+
+All data is stored in Vercel Blob (cloud storage):
+
+- **Professors:** `professors.json` (master index)
+- **Corpora:** `corpora/{professorId}.json` (per professor)
+- **Images:** `images/professors/{safeName}.ext` (per professor)
+
+---
+
 ## Notes
 
 - **Current model:** `local-llama/qwen3-coder-next` (runtime) / `default_model` same
 - **Workspace:** `/home/nixos/.openclaw/workspace/projects/nlp.js`
 - **Push target:** `git@github.com:Avnerus/nlp.js.git`
+- **Blob storage:** `vercel_blob_rw_0tq3xJdZh1emKCko_poIWDphXoScx6cxoRx7xFOu8FiHPl5`
 
 ---
 

@@ -1,5 +1,4 @@
-const fs = require('fs').promises;
-const path = require('path');
+import { get } from '@vercel/blob';
 
 export default async function handler(req, res) {
   // Enable CORS
@@ -16,22 +15,18 @@ export default async function handler(req, res) {
   }
   
   try {
-    const { professorId, message, locale = 'en' } = req.body;
+    const body = await req.json();
+    const { professorId, message, locale = 'en' } = body;
     
     if (!professorId || !message) {
       return res.status(400).json({ error: 'professorId and message are required' });
     }
     
-    const dataDir = path.join(__dirname, '..', 'data');
-    const professorsFile = path.join(dataDir, 'professors.json');
-    
-    // Read professors
+    // Read professors list
+    const professorsBlob = await get('professors.json');
     let professors = [];
-    try {
-      const data = await fs.readFile(professorsFile, 'utf8');
-      professors = JSON.parse(data);
-    } catch (err) {
-      if (err.code !== 'ENOENT') throw err;
+    if (professorsBlob && professorsBlob.text) {
+      professors = JSON.parse(await professorsBlob.text());
     }
     
     // Find professor
@@ -40,16 +35,23 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Professor not found' });
     }
     
-    // Load corpus
-    const corpusPath = path.join(dataDir, 'corpora', `${professorId}.json`);
+    // Load corpus from Blob
+    const corpusBlob = await get(`corpora/${professorId}.json`);
+    let corpus = null;
+    if (corpusBlob && corpusBlob.text) {
+      corpus = JSON.parse(await corpusBlob.text());
+    }
+    
+    if (!corpus) {
+      return res.status(404).json({ error: 'Corpus not found' });
+    }
     
     // Load NLP
     const { dockStart } = require('@nlpjs/basic');
     const dock = await dockStart();
     const nlp = dock.get('nlp');
     
-    // Load corpus file and add intents
-    const corpus = require(corpusPath);
+    // Load corpus and add intents
     for (const item of corpus.data) {
       const { intent, utterances, answers } = item;
       

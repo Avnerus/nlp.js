@@ -1,5 +1,4 @@
-const fs = require('fs').promises;
-const path = require('path');
+import { get } from '@vercel/blob';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -7,16 +6,11 @@ export default async function handler(req, res) {
   }
   
   try {
-    const dataDir = path.join(__dirname, '..', 'data');
-    const professorsFile = path.join(dataDir, 'professors.json');
-    
-    // Read professors
+    // Read professors from Vercel Blob
+    const professorsBlob = await get('professors.json');
     let professors = [];
-    try {
-      const data = await fs.readFile(professorsFile, 'utf8');
-      professors = JSON.parse(data);
-    } catch (err) {
-      if (err.code !== 'ENOENT') throw err;
+    if (professorsBlob && professorsBlob.text) {
+      professors = JSON.parse(await professorsBlob.text());
     }
     
     res.status(200).json(professors);

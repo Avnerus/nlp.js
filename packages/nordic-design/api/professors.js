@@ -1,73 +1,65 @@
-const fs = require('fs').promises;
-const path = require('path');
+import { put, get } from '@vercel/blob';
+import path from 'path';
 
 export default async function handler(req, res) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
   
   try {
-    const dataDir = path.join(__dirname, '..', 'data');
-    const corporaDir = path.join(dataDir, 'corpora');
-    const professorsFile = path.join(dataDir, 'professors.json');
+    const formData = await req.formData();
+    const name = formData.get('name');
+    const field = formData.get('field');
+    const imageFile = formData.get('image');
     
-    // Create directories
-    await fs.mkdir(dataDir, { recursive: true });
-    await fs.mkdir(corporaDir, { recursive: true });
-    
-    // Initialize professors file
-    try {
-      await fs.access(professorsFile);
-    } catch (err) {
-      if (err.code === 'ENOENT') {
-        await fs.writeFile(professorsFile, JSON.stringify([], null, 2));
-      } else {
-        throw err;
-      }
+    // Upload image if provided
+    let imageUrl = '/images/default-professor.jpg';
+    if (imageFile && imageFile instanceof File) {
+      const arrayBuffer = await imageFile.arrayBuffer();
+      const ext = path.extname(imageFile.name).toLowerCase();
+      const safeName = `prof_${Date.now()}${ext}`;
+      const { url } = await put(`images/professors/${safeName}`, Buffer.from(arrayBuffer), { 
+        access: 'public',
+        cacheControl: 'public, max-age=31536000, immutable'
+      });
+      imageUrl = url;
     }
-    
-    // Read existing professors
-    let professors = [];
-    try {
-      const data = await fs.readFile(professorsFile, 'utf8');
-      professors = JSON.parse(data);
-    } catch (err) {
-      if (err.code !== 'ENOENT') throw err;
-    }
-    
-    // Generate new professor ID
-    const newId = `prof_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    const { name, field, image } = req.body;
     
     // Create corpus from template
     const templatePath = path.join(__dirname, '..', 'corpus-en.json');
     const template = require(templatePath);
+    const newId = `prof_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    const corpusPath = path.join(corporaDir, `${newId}.json`);
-    await fs.writeFile(corpusPath, JSON.stringify(template, null, 2));
+    // Upload corpus to Blob
+    await put(`corpora/${newId}.json`, JSON.stringify(template, null, 2), { 
+      access: 'public',
+      cacheControl: 'no-cache'
+    });
+    
+    // Initialize professors list
+    let professors = [];
+    const professorsBlob = await get('professors.json');
+    if (professorsBlob && professorsBlob.text) {
+      professors = JSON.parse(await professorsBlob.text());
+    }
     
     // Create professor entry
     const professor = {
       id: newId,
       name,
       field,
-      image: image || '/images/default-professor.jpg',
+      image: imageUrl,
       corpus: `corpora/${newId}.json`,
       createdAt: new Date().toISOString()
     };
     
     professors.push(professor);
-    await fs.writeFile(professorsFile, JSON.stringify(professors, null, 2));
+    
+    // Save updated professors list to Blob
+    await put('professors.json', JSON.stringify(professors, null, 2), { 
+      access: 'public',
+      cacheControl: 'no-cache'
+    });
     
     res.status(201).json(professor);
   } catch (err) {

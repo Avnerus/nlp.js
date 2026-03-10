@@ -1,5 +1,4 @@
-const fs = require('fs').promises;
-const path = require('path');
+import { get, put } from '@vercel/blob';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'PUT') {
@@ -7,16 +6,11 @@ export default async function handler(req, res) {
   }
   
   try {
-    const dataDir = path.join(__dirname, '..', 'data');
-    const professorsFile = path.join(dataDir, 'professors.json');
-    
-    // Read professors
+    // Read professors from Vercel Blob
+    const professorsBlob = await get('professors.json');
     let professors = [];
-    try {
-      const data = await fs.readFile(professorsFile, 'utf8');
-      professors = JSON.parse(data);
-    } catch (err) {
-      if (err.code !== 'ENOENT') throw err;
+    if (professorsBlob && professorsBlob.text) {
+      professors = JSON.parse(await professorsBlob.text());
     }
     
     // Find professor by ID
@@ -31,13 +25,11 @@ export default async function handler(req, res) {
     }
     
     if (req.method === 'GET') {
-      // Load corpus
-      const corpusPath = path.join(dataDir, 'corpora', `${professorId}.json`);
+      // Load corpus from Vercel Blob
+      const corpusBlob = await get(`corpora/${professorId}.json`);
       let corpus = null;
-      try {
-        corpus = require(corpusPath);
-      } catch (err) {
-        // Corpus doesn't exist yet
+      if (corpusBlob && corpusBlob.text) {
+        corpus = JSON.parse(await corpusBlob.text());
       }
       
       return res.status(200).json({
@@ -48,8 +40,11 @@ export default async function handler(req, res) {
     
     if (req.method === 'PUT') {
       const { corpus } = req.body;
-      const corpusPath = path.join(dataDir, 'corpora', `${professorId}.json`);
-      await fs.writeFile(corpusPath, JSON.stringify(corpus, null, 2));
+      // Save corpus to Vercel Blob
+      await put(`corpora/${professorId}.json`, JSON.stringify(corpus, null, 2), { 
+        access: 'public',
+        cacheControl: 'no-cache'
+      });
       
       return res.status(200).json(professor);
     }

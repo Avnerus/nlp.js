@@ -1,6 +1,5 @@
-const fs = require('fs').promises;
-const path = require('path');
-const busboy = require('busboy');
+import { put } from '@vercel/blob';
+import path from 'path';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -8,36 +7,28 @@ export default async function handler(req, res) {
   }
   
   try {
-    const bb = busboy({ headers: req.headers });
-    const uploadDir = path.join(__dirname, '..', 'public', 'images', 'professors');
+    const formData = await req.formData();
+    const file = formData.get('image');
     
-    // Ensure upload directory exists
-    await fs.mkdir(uploadDir, { recursive: true });
+    if (!file || !(file instanceof File)) {
+      return res.status(400).json({ error: 'No image uploaded' });
+    }
     
-    let filePath;
+    // Read file as arrayBuffer
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
     
-    bb.on('file', (fieldname, file, filename, encoding, mimetype) => {
-      if (fieldname !== 'image') return;
-      
-      const ext = path.extname(filename).toLowerCase();
-      const safeName = `prof_${Date.now()}${ext}`;
-      filePath = path.join(uploadDir, safeName);
-      
-      file.pipe(fs.createWriteStream(filePath));
+    // Generate unique filename
+    const ext = path.extname(file.name).toLowerCase();
+    const safeName = `prof_${Date.now()}${ext}`;
+    
+    // Upload to Vercel Blob
+    const { url } = await put(`images/professors/${safeName}`, buffer, { 
+      access: 'public',
+      cacheControl: 'public, max-age=31536000, immutable'
     });
     
-    bb.on('close', async () => {
-      if (filePath) {
-        res.status(200).json({ 
-          url: `/images/professors/${path.basename(filePath)}` 
-        });
-      } else {
-        res.status(400).json({ error: 'No image uploaded' });
-      }
-    });
-    
-    req.on('data', (chunk) => bb.write(chunk));
-    req.on('end', () => bb.end());
+    res.status(200).json({ url });
   } catch (err) {
     console.error('Error uploading image:', err);
     res.status(500).json({ error: 'Failed to upload image' });
