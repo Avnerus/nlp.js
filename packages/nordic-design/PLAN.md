@@ -78,7 +78,18 @@ We need to build a web application where students can create custom chatbots mod
 
 2. **Implement `/api/professors` routes**
    - `GET /api/professors` — return JSON array of all professors from Blob
-   - `POST /api/professors` — create professor, generate UUID, upload to Blob
+   - `POST /api/professors` — create professor, generate UUID, upload image and corpus to Blob
+     - Accepts FormData with: name, field, image (optional)
+
+3. **Implement `/api/professors/[id]` routes**
+   - `GET /api/professors/[id]` — return professor + corpus from Blob
+   - `PUT /api/professors/[id]` — save updated corpus to Blob
+
+4. **Implement `/api/chat` route**
+   - Accept JSON with `{ professorId, message, locale }`
+   - Load professor's corpus from Blob
+   - Initialize NLP.js with that corpus
+   - Return chatbot response
 
 3. **Implement `/api/professors/[id]` routes**
    - `GET /api/professors/[id]` — return professor + corpus
@@ -137,7 +148,7 @@ The corpus is now stored in Vercel Blob. We need to:
 3. **`/public/chat.html`** - Chat interface
    - Render professor image/name at top
    - Chat UI (input + message list)
-   - `POST /api/chat` with `{ professorId, message }`
+   - `POST /api/chat` with JSON `{ professorId, message }`
    - Stream/return responses
 
 ---
@@ -223,6 +234,13 @@ All data is stored in Vercel Blob (cloud storage):
 - **Professors:** `professors.json` (master index)
 - **Corpora:** `corpora/{professorId}.json` (per professor)
 - **Images:** `images/professors/{safeName}.ext` (per professor)
+
+## Frontend (HTML)
+
+- **`/public/index.html`** - Professor listing + create form (multipart/form-data)
+- **`/public/professors.html`** - Professor profile + corpus editor
+- **`/public/chat.html`** - Chat interface
+
 
 ---
 

@@ -101,33 +101,11 @@
         e.preventDefault();
         
         const formData = new FormData(e.target);
-        const name = formData.get('name');
-        const field = formData.get('field');
-        const image = formData.get('image');
-        
-        const data = { name, field };
-        
-        if (image) {
-          const imageFormData = new FormData();
-          imageFormData.append('image', image);
-          
-          try {
-            const imgResponse = await fetch('/api/image-upload', {
-              method: 'POST',
-              body: imageFormData
-            });
-            const imgData = await imgResponse.json();
-            data.image = imgData.url;
-          } catch (err) {
-            console.error('Image upload failed:', err);
-          }
-        }
         
         try {
           const response = await fetch('/api/professors', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: formData
           });
           
           if (response.ok) {
