@@ -1,10 +1,11 @@
 import { put } from '@vercel/blob';
 import path from 'path';
+import busboy from 'busboy';
 
 export const config = {
-api: {
-  bodyParser: false,
-}
+  api: {
+    bodyParser: false,
+  },
 };
 
 export default async function handler(req, res) {
@@ -16,6 +17,40 @@ export default async function handler(req, res) {
   }
   
   return res.status(405).json({ error: 'Method not allowed' });
+}
+
+async function parseFormData(req) {
+  return new Promise((resolve, reject) => {
+    const bb = busboy({ headers: req.headers });
+    const fields = {};
+    let imageFile = null;
+
+    bb.on('field', (name, value) => {
+      fields[name] = value;
+    });
+
+    bb.on('file', (name, file, { mimeType }) => {
+      if (name === 'image' && mimeType.startsWith('image/')) {
+        const chunks = [];
+        file.on('data', (chunk) => chunks.push(chunk));
+        file.on('end', () => {
+          imageFile = {
+            buffer: Buffer.concat(chunks),
+            mimeType,
+            name: `prof_${Date.now()}${path.extname(file.filename || '')}`,
+          };
+        });
+      }
+    });
+
+    bb.on('close', () => {
+      resolve({ fields, imageFile });
+    });
+
+    bb.on('error', reject);
+
+    req.pipe(bb);
+  });
 }
 
 async function listProfessors(req, res) {
@@ -35,17 +70,13 @@ async function listProfessors(req, res) {
 
 async function createProfessor(req, res) {
   try {
-    const formData = await req.formData();
-    const name = formData.get('name');
-    const field = formData.get('field');
-    const imageFile = formData.get('image');
+    const { fields, imageFile } = await parseFormData(req);
+    const name = fields.name || '';
+    const field = fields.field || '';
     
-    let imageUrl = '/images/default-professor.jpg';
-    if (imageFile && imageFile instanceof File) {
-      const arrayBuffer = await imageFile.arrayBuffer();
-      const ext = path.extname(imageFile.name).toLowerCase();
-      const safeName = `prof_${Date.now()}${ext}`;
-      const { url } = await put(`images/professors/${safeName}`, Buffer.from(arrayBuffer), { 
+    let imageUrl = 'https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/images/professors/default-professor.jpg';
+    if (imageFile) {
+      const { url } = await put(`images/professors/${imageFile.name}`, imageFile.buffer, { 
         access: 'public',
         cacheControl: 'public, max-age=31536000, immutable'
       });
@@ -63,9 +94,9 @@ async function createProfessor(req, res) {
     const corpusUrl = corpusBlob.url;
     
     let professors = [];
-    const professorsBlob = await get('professors.json');
-    if (professorsBlob && professorsBlob.text) {
-      professors = JSON.parse(await professorsBlob.text());
+    const professorsBlob = await fetch("https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/professors.json");
+    if (professorsBlob && professorsBlob.ok) {
+      professors = await professorsBlob.json();
     }
     
     const professor = {
