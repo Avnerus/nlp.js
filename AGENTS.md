@@ -93,6 +93,8 @@ This runs `lerna bootstrap` (via `postinstall`) which:
 - Installs dependencies in each package
 - Creates symlinks between local packages
 
+Make sure to run this after every `git pull`.
+
 ### Running Tests
 
 ```bash
