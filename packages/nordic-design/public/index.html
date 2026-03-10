@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nordic Design Professor Chatbot</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simple-styles@1.0.0/simple-styles.min.css">
+    <style>
+      body { padding: 20px; background: #f5f5f5; }
+      .container { max-width: 1200px; margin: 0 auto; }
+      .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+      .form-group { margin-bottom: 15px; }
+      label { display: block; margin-bottom: 5px; font-weight: 600; }
+      input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+      button { background: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+      button:hover { background: #2980b9; }
+      .professors-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+      .professor-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.2s; }
+      .professor-card:hover { transform: translateY(-5px); }
+      .professor-card img { width: 100%; height: 150px; object-fit: cover; }
+      .professor-card .content { padding: 15px; }
+      .professor-card h3 { margin: 0 0 10px 0; color: #2c3e50; }
+      .professor-card .field { color: #7f8c8d; font-size: 14px; margin-bottom: 10px; }
+      .professor-card a { display: inline-block; background: #3498db; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1 style="color: #2c3e50;">Nordic Design Professor Chatbot</h1>
+      <p>Create your own Nordic design professor chatbot and chat with existing ones.</p>
+      
+      <div class="card">
+        <h2>Create Your Professor</h2>
+        <form id="createForm">
+          <div class="form-group">
+            <label for="name">Professor Name</label>
+            <input type="text" id="name" name="name" required placeholder="e.g., Jane Doe">
+          </div>
+          
+          <div class="form-group">
+            <label for="field">Field of Expertise</label>
+            <select id="field" name="field" required>
+              <option value="">Select a field...</option>
+              <option value="Industrial & Product Design">Industrial & Product Design</option>
+              <option value="Furniture Design">Furniture Design</option>
+              <option value="Architecture">Architecture</option>
+              <option value="Visual Communication & Graphic Design">Visual Communication & Graphic Design</option>
+              <option value="Service Design">Service Design</option>
+              <option value="UX / UI / Digital Product Design">UX / UI / Digital Product Design</option>
+              <option value="Sustainable / Eco Design">Sustainable / Eco Design</option>
+              <option value="Game Design">Game Design</option>
+              <option value="Textile / Fashion / Lifestyle Design">Textile / Fashion / Lifestyle Design</option>
+              <option value="Packaging Design">Packaging Design</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="image">Professor Image (optional)</label>
+            <input type="file" id="image" name="image" accept="image/*">
+          </div>
+          
+          <button type="submit">Create Professor</button>
+        </form>
+      </div>
+      
+      <div class="card">
+        <h2>Existing Professors</h2>
+        <div id="professorsGrid" class="professors-grid"></div>
+      </div>
+    </div>
+    
+    <script>
+      async function loadProfessors() {
+        try {
+          const response = await fetch('/api/professors');
+          const professors = await response.json();
+          
+          const container = document.getElementById('professorsGrid');
+          if (professors.length === 0) {
+            container.innerHTML = '<p style="grid-column: 1/-1; color: #666;">No professors yet. Create one above!</p>';
+            return;
+          }
+          
+          container.innerHTML = professors.map(p => `
+            <div class="professor-card">
+              <img src="${p.image}" alt="${p.name}">
+              <div class="content">
+                <h3>${p.name}</h3>
+                <p class="field">${p.field}</p>
+                <a href="/chat.html?id=${p.id}">Start Chatting</a>
+                <a href="/professors.html?id=${p.id}" style="background: #27ae60; margin-top: 5px; display: inline-block;">Edit Corpus</a>
+              </div>
+            </div>
+          `).join('');
+        } catch (err) {
+          console.error('Failed to load professors:', err);
+        }
+      }
+      
+      document.getElementById('createForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        const name = formData.get('name');
+        const field = formData.get('field');
+        const image = formData.get('image');
+        
+        const data = { name, field };
+        
+        if (image) {
+          const imageFormData = new FormData();
+          imageFormData.append('image', image);
+          
+          try {
+            const imgResponse = await fetch('/api/image-upload', {
+              method: 'POST',
+              body: imageFormData
+            });
+            const imgData = await imgResponse.json();
+            data.image = imgData.url;
+          } catch (err) {
+            console.error('Image upload failed:', err);
+          }
+        }
+        
+        try {
+          const response = await fetch('/api/professors', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          
+          if (response.ok) {
+            alert('Professor created successfully!');
+            e.target.reset();
+            loadProfessors();
+          } else {
+            const err = await response.json();
+            alert(`Error: ${err.error}`);
+          }
+        } catch (err) {
+          console.error('Failed to create professor:', err);
+          alert('Failed to create professor');
+        }
+      });
+      
+      loadProfessors();
+    </script>
+  </body>
+</html>

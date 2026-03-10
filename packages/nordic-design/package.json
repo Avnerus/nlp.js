@@ -1,17 +1,28 @@
 {
   "name": "nordic-design",
   "version": "4.27.0",
-  "description": "> TODO: description",
+  "description": "Nordic Design Professor Chatbot - Create custom chatbots modeled after Nordic design professors",
   "author": "avnerus <avnerus@gmail.com>",
-  "homepage": "https://github.com/axa-group/nlp.js/tree/main/packages/nordic-design#readme",
+  "homepage": "https://github.com/Avnerus/nlp.js/tree/main/packages/nordic-design#readme",
   "license": "ISC",
-  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Avnerus/nlp.js.git"
   },
+  "vercel": {
+    "builds": [
+      { "src": "api/**/*.js", "use": "@vercel/node" },
+      { "src": "public/**/*", "use": "@vercel/static" }
+    ],
+    "routes": [
+      { "src": "/api/(.*)", "dest": "/api/$1" },
+      { "src": "/(.*)", "dest": "/$1" }
+    ]
+  },
   "scripts": {
-    "test": "node ./__tests__/nordic-design.test.js"
+    "dev": "vercel dev",
+    "build": "vercel build",
+    "start": "vercel start"
   },
   "bugs": {
     "url": "https://github.com/Avnerus/nlp.js/issues"
@@ -23,6 +34,8 @@
     "@nlpjs/evaluator": "^4.26.1",
     "@nlpjs/lang-en": "^4.26.1",
     "@nlpjs/logger": "^4.26.1",
-    "@nlpjs/nlp": "^4.27.0"
+    "@nlpjs/nlp": "^4.27.0",
+    "cors": "^2.8.5",
+    "busboy": "^1.6.0"
   }
 }
