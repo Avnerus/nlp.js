@@ -131,9 +131,9 @@ The current `index.js` is just a placeholder. We need to:
 
 ---
 
-### Phase 3: Frontend
+### Phase 3: Frontend - HTML version for Vercel static hosting
 
-1. **Create `/pages/index.jsx`**
+1. **`/public/index.html`** - Professor listing + create form
    - `GET /api/professors` → render list of existing professors
    - Form to create new professor:
      - Name input
@@ -145,7 +145,7 @@ The current `index.js` is just a placeholder. We need to:
    - `GET /api/professors/[id]` → load professor + corpus
    - JSON editor (Ace Editor or CodeMirror)
    - "Save" button → `PUT /api/professors/[id]`
-   - "Test Chatbot" link → `/chat/[id]`
+   - "Test Chatbot" link → `/chat.html?id=[id]`
 
 3. **Create `/pages/chat/[id].jsx`**
    - Render professor image/name at top
@@ -159,13 +159,11 @@ The current `index.js` is just a placeholder. We need to:
 
 The `corpus-en.json` template should be the base for all professors. We need:
 
-1. **Create `src/corpus-template.json`** — copy of `corpus-en.json` with placeholders
-2. **Modify corpus loading logic** to handle professor-specific fields:
-   - `{{ professorName }}`
+1. **The template exists** at `corpus-en.json`
+2. **Modify corpus loading logic** in `/api/chat` to handle professor-specific fields:
    - `{{ field }}`
-   - `{{ university }}` (future expansion)
 
-3. **On professor creation**, copy template → custom corpus file
+3. **On professor creation**, copy template → custom corpus file (done in `api/professors.js`)
 
 ---
 
@@ -223,7 +221,7 @@ Create `vercel.json` in the package root:
 ## Future Enhancements (Out of Scope)
 
 - Multi-language support (`lang-fi`, `lang-sv`, `lang-nb`)
-- Professor customization (personality traits)
+- Professor customization (personality traits via corpus editing)
 - Export corpus as JSON
 - Share professor URL
 - Chat history persistence
