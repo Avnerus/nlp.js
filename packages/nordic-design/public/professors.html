@@ -5,76 +5,125 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Professor - Nordic Design Chatbot</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-      @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
-      body { font-family: 'Inter', sans-serif; }
-      .nordic-blue { color: #2c3e50; }
-      .nordic-light { background-color: #f8fafc; }
-      .nordic-white { background-color: white; }
-      .nordic-gray { color: #64748b; }
-      .nordic-accent { background-color: #3b82f6; }
-      .nordic-accent:hover { background-color: #2563eb; }
-      .nordic-green { background-color: #10b981; }
-      .nordic-green:hover { background-color: #059669; }
+      body { 
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+      }
+      .nordic-blue { color: #1e3a8a; }
+      .nordic-accent { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+      .nordic-accent:hover { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); }
+      .nordic-green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+      .nordic-green:hover { background: linear-gradient(135deg, #059669 0%, #047857 100%); }
       .nordic-card {
         background: white;
-        border-radius: 16px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
-        transition: all 0.3s ease;
+        border-radius: 20px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+        border: 1px solid rgba(0,0,0,0.05);
+      }
+      .nordic-input {
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+      }
+      .nordic-input:focus {
+        background: white;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+      .nordic-field-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+      }
+      .nordic-btn {
+        display: inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold transition shadow-md hover:shadow-lg;
       }
     </style>
   </head>
-  <body class="bg-nordic-light min-h-screen">
+  <body class="min-h-screen">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Header -->
-      <div class="flex justify-between items-center mb-8">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 id="professorName" class="text-3xl font-bold nordic-blue">Edit Professor</h1>
-          <p class="nordic-gray mt-1">Modify the chatbot's personality and knowledge</p>
+          <div class="flex items-center gap-3 mb-2">
+            <a href="/" class="nordic-gray hover:text-blue-600 transition">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+              </svg>
+            </a>
+            <span class="text-gray-400">/</span>
+            <h1 id="professorName" class="text-3xl font-bold nordic-blue">Edit Professor</h1>
+          </div>
+          <p class="text-gray-600 mt-1">Modify the chatbot's personality and knowledge</p>
         </div>
         <div class="flex gap-3">
-          <a href="/" class="px-6 py-2 border border-gray-200 rounded-lg nordic-gray hover:bg-gray-50 transition font-medium">
-            <i class="fas fa-arrow-left mr-2"></i> Back to Home
-          </a>
-          <a href="/chat.html" id="testChatBtn" class="nordic-accent text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition font-medium shadow-lg">
-            <i class="fas fa-comments mr-2"></i> Test Chatbot
+          <a href="/chat.html" id="testChatBtn" class="nordic-green nordic-btn text-white">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+            </svg>
+            Test Chatbot
           </a>
         </div>
       </div>
       
       <!-- Professor Info Card -->
-      <div class="nordic-card p-6 mb-8">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <p class="text-sm font-medium nordic-gray mb-1">Professor ID</p>
-            <p id="professorId" class="text-lg font-mono nordic-blue break-all">Loading...</p>
+      <div class="nordic-card p-8 mb-8">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
           </div>
-          <div>
-            <p class="text-sm font-medium nordic-gray mb-1">Field</p>
-            <p id="professorField" class="text-lg nordic-blue">Loading...</p>
+          <h2 class="text-xl font-bold nordic-blue">Professor Details</h2>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="space-y-2">
+            <label class="nordic-field-label">Professor ID</label>
+            <p id="professorId" class="font-mono text-lg text-gray-700 break-all">Loading...</p>
           </div>
-          <div>
-            <p class="text-sm font-medium nordic-gray mb-1">Created</p>
-            <p id="professorCreated" class="text-lg nordic-blue">Loading...</p>
+          <div class="space-y-2">
+            <label class="nordic-field-label">Field</label>
+            <p id="professorField" class="text-xl font-semibold nordic-blue">Loading...</p>
+          </div>
+          <div class="space-y-2">
+            <label class="nordic-field-label">Created</label>
+            <p id="professorCreated" class="text-lg text-gray-700">Loading...</p>
           </div>
         </div>
       </div>
       
       <!-- Corpus Editor Card -->
-      <div class="nordic-card p-6">
-        <h2 class="text-xl font-semibold nordic-blue mb-4 flex items-center">
-          <i class="fas fa-code mr-2 text-blue-500"></i> Corpus JSON
-        </h2>
-        <p class="text-sm nordic-gray mb-4">Edit the chatbot's intents and responses. The JSON structure matches the standard NLP.js corpus format.</p>
+      <div class="nordic-card p-8">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+            </svg>
+          </div>
+          <h2 class="text-xl font-bold nordic-blue">Corpus JSON</h2>
+        </div>
+        <p class="text-gray-600 mb-6 leading-relaxed">
+          Edit the chatbot's intents and responses. The JSON structure matches the standard NLP.js corpus format. 
+          Each intent contains utterances (phrases that trigger it) and answers (responses to give).
+        </p>
         
         <div class="relative">
-          <textarea id="corpusEditor" class="w-full h-[500px] px-4 py-3 font-mono text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none" placeholder='{"data": []}'></textarea>
+          <textarea id="corpusEditor" class="nordic-input w-full h-[600px] px-6 py-4 font-mono text-sm rounded-xl transition resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder='{"data": []}'></textarea>
         </div>
         
-        <div class="mt-6 flex justify-end">
-          <button type="submit" form="corpusForm" class="nordic-green text-white px-8 py-3 rounded-lg font-medium transition shadow-lg">
-            <i class="fas fa-save mr-2"></i> Save Corpus
+        <div class="mt-8 flex justify-end">
+          <button type="submit" form="corpusForm" class="nordic-green nordic-btn text-white">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+            </svg>
+            Save Corpus
           </button>
         </div>
       </div>
@@ -92,7 +141,13 @@
           document.getElementById('professorName').textContent = `Edit: ${data.name}`;
           document.getElementById('professorId').textContent = data.id;
           document.getElementById('professorField').textContent = data.field;
-          document.getElementById('professorCreated').textContent = new Date(data.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+          document.getElementById('professorCreated').textContent = new Date(data.createdAt).toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
           
           if (data.corpus) {
             document.getElementById('corpusEditor').value = JSON.stringify(data.corpus, null, 2);

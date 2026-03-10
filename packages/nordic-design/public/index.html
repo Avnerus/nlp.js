@@ -5,80 +5,135 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nordic Design Professor Chatbot</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-      body { font-family: 'Inter', sans-serif; }
-      .nordic-blue { color: #2c3e50; }
-      .nordic-light { background-color: #f8fafc; }
-      .nordic-white { background-color: white; }
-      .nordic-gray { color: #64748b; }
-      .nordic-accent { background-color: #3b82f6; }
-      .nordic-accent:hover { background-color: #2563eb; }
-      .nordic-green { background-color: #10b981; }
-      .nordic-green:hover { background-color: #059669; }
+      body { 
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+      }
+      .nordic-blue { color: #1e3a8a; }
+      .nordic-accent { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+      .nordic-accent:hover { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); }
+      .nordic-green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+      .nordic-green:hover { background: linear-gradient(135deg, #059669 0%, #047857 100%); }
       .nordic-card {
         background: white;
-        border-radius: 16px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
-        transition: all 0.3s ease;
+        border-radius: 20px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+        border: 1px solid rgba(0,0,0,0.05);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
       .nordic-card:hover {
-        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-        transform: translateY(-2px);
+        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+        transform: translateY(-4px);
+      }
+      .nordic-input {
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        transition: all 0.2s ease;
+      }
+      .nordic-input:focus {
+        background: white;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+      .nordic-field-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
       }
     </style>
   </head>
-  <body class="bg-nordic-light min-h-screen">
+  <body class="min-h-screen">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <!-- Header -->
       <header class="text-center mb-16">
-        <h1 class="text-4xl font-bold nordic-blue mb-4">🎓 Nordic Design Professor</h1>
-        <p class="text-lg nordic-gray">Create your own Nordic design professor chatbot and chat with existing ones</p>
+        <div class="inline-flex items-center justify-center p-4 bg-blue-50 rounded-full mb-6">
+          <svg class="w-12 h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+          </svg>
+        </div>
+        <h1 class="text-5xl font-bold nordic-blue mb-6 tracking-tight">Nordic Design Professor</h1>
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+          Create your own Nordic design professor chatbot and chat with existing ones. 
+          Inspired by minimalist Scandinavian design principles.
+        </p>
       </header>
       
       <!-- Create Professor Card -->
-      <div class="nordic-card p-8 mb-12">
-        <h2 class="text-2xl font-semibold nordic-blue mb-6">Create Your Professor</h2>
-        <form id="createForm" class="space-y-6">
-          <div>
-            <label for="name" class="block text-sm font-medium nordic-gray mb-2">Professor Name</label>
-            <input type="text" id="name" name="name" required placeholder="e.g., Jane Doe" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+      <div class="nordic-card p-10 mb-12">
+        <div class="flex items-center gap-3 mb-8">
+          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+          </div>
+          <h2 class="text-2xl font-bold nordic-blue">Create Your Professor</h2>
+        </div>
+        
+        <form id="createForm" class="space-y-8">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-3">
+              <label class="nordic-field-label">Professor Name</label>
+              <input type="text" id="name" name="name" required placeholder="e.g., Jane Doe" class="nordic-input w-full px-5 py-4 rounded-xl transition text-lg">
+            </div>
+            
+            <div class="space-y-3">
+              <label class="nordic-field-label">Field of Expertise</label>
+              <select id="field" name="field" required class="nordic-input w-full px-5 py-4 rounded-xl transition text-lg">
+                <option value="">Select a field...</option>
+                <option value="Industrial & Product Design">Industrial & Product Design</option>
+                <option value="Furniture Design">Furniture Design</option>
+                <option value="Architecture">Architecture</option>
+                <option value="Visual Communication & Graphic Design">Visual Communication & Graphic Design</option>
+                <option value="Service Design">Service Design</option>
+                <option value="UX / UI / Digital Product Design">UX / UI / Digital Product Design</option>
+                <option value="Sustainable / Eco Design">Sustainable / Eco Design</option>
+                <option value="Game Design">Game Design</option>
+                <option value="Textile / Fashion / Lifestyle Design">Textile / Fashion / Lifestyle Design</option>
+                <option value="Packaging Design">Packaging Design</option>
+              </select>
+            </div>
           </div>
           
-          <div>
-            <label for="field" class="block text-sm font-medium nordic-gray mb-2">Field of Expertise</label>
-            <select id="field" name="field" required class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-              <option value="">Select a field...</option>
-              <option value="Industrial & Product Design">Industrial & Product Design</option>
-              <option value="Furniture Design">Furniture Design</option>
-              <option value="Architecture">Architecture</option>
-              <option value="Visual Communication & Graphic Design">Visual Communication & Graphic Design</option>
-              <option value="Service Design">Service Design</option>
-              <option value="UX / UI / Digital Product Design">UX / UI / Digital Product Design</option>
-              <option value="Sustainable / Eco Design">Sustainable / Eco Design</option>
-              <option value="Game Design">Game Design</option>
-              <option value="Textile / Fashion / Lifestyle Design">Textile / Fashion / Lifestyle Design</option>
-              <option value="Packaging Design">Packaging Design</option>
-            </select>
+          <div class="space-y-3">
+            <label class="nordic-field-label">Professor Image (optional)</label>
+            <div class="nordic-input w-full px-5 py-4 rounded-xl transition text-gray-600">
+              <input type="file" id="image" name="image" accept="image/*" class="w-full text-gray-600 text-sm">
+            </div>
+            <p class="text-sm text-gray-500 mt-2">Upload a photo to represent your professor</p>
           </div>
           
-          <div>
-            <label for="image" class="block text-sm font-medium nordic-gray mb-2">Professor Image (optional)</label>
-            <input type="file" id="image" name="image" accept="image/*" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-          </div>
-          
-          <button type="submit" class="nordic-accent text-white px-8 py-3 rounded-lg font-medium transition shadow-lg">
+          <button type="submit" class="nordic-accent text-white px-10 py-4 rounded-xl font-semibold text-lg transition shadow-lg hover:shadow-xl hover:-translate-y-0.5 w-full md:w-auto">
             Create Professor
           </button>
         </form>
       </div>
       
       <!-- Existing Professors -->
-      <div class="nordic-card p-8">
-        <h2 class="text-2xl font-semibold nordic-blue mb-6">Existing Professors</h2>
-        <div id="professorsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div class="col-span-full text-center py-8 nordic-gray">
-            <p>No professors yet. Create one above!</p>
+      <div class="nordic-card p-10">
+        <div class="flex items-center gap-3 mb-8">
+          <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+          </div>
+          <h2 class="text-2xl font-bold nordic-blue">Existing Professors</h2>
+        </div>
+        
+        <div id="professorsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div class="col-span-full text-center py-16">
+            <div class="w-24 h-24 bg-gray-100 rounded-full mx-auto mb-6 flex items-center justify-center">
+              <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+            </div>
+            <p class="text-gray-500 text-lg">No professors yet. Create one above!</p>
           </div>
         </div>
       </div>
@@ -92,23 +147,32 @@
           
           const container = document.getElementById('professorsGrid');
           if (professors.length === 0) {
-            container.innerHTML = '<div class="col-span-full text-center py-8 nordic-gray"><p>No professors yet. Create one above!</p></div>';
+            container.innerHTML = `
+              <div class="col-span-full text-center py-16">
+                <div class="w-24 h-24 bg-gray-100 rounded-full mx-auto mb-6 flex items-center justify-center">
+                  <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                  </svg>
+                </div>
+                <p class="text-gray-500 text-lg">No professors yet. Create one above!</p>
+              </div>`;
             return;
           }
           
           container.innerHTML = professors.map(p => `
             <div class="nordic-card overflow-hidden group">
-              <div class="h-48 overflow-hidden">
-                <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+              <div class="h-56 overflow-hidden relative">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent z-10"></div>
+                <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
               </div>
-              <div class="p-6">
-                <h3 class="text-xl font-semibold nordic-blue mb-2">${p.name}</h3>
-                <p class="nordic-gray text-sm mb-4">${p.field}</p>
-                <div class="flex gap-3">
-                  <a href="/chat.html?id=${p.id}" class="nordic-accent text-white px-4 py-2 rounded-lg text-sm font-medium text-center transition flex-1">
+              <div class="p-8">
+                <h3 class="text-2xl font-bold nordic-blue mb-2">${p.name}</h3>
+                <p class="nordic-gray text-lg mb-6">${p.field}</p>
+                <div class="flex gap-4">
+                  <a href="/chat.html?id=${p.id}" class="flex-1 text-center py-3 rounded-xl font-semibold text-white transition shadow-md hover:shadow-lg">
                     Start Chatting
                   </a>
-                  <a href="/professors.html?id=${p.id}" class="nordic-green text-white px-4 py-2 rounded-lg text-sm font-medium text-center transition flex-1">
+                  <a href="/professors.html?id=${p.id}" class="flex-1 text-center py-3 rounded-xl font-semibold text-white transition shadow-md hover:shadow-lg">
                     Edit Corpus
                   </a>
                 </div>
