@@ -1,45 +1,53 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nordic Design Professor Chatbot</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simple-styles@1.0.0/simple-styles.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      body { padding: 20px; background: #f5f5f5; }
-      .container { max-width: 1200px; margin: 0 auto; }
-      .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-      .form-group { margin-bottom: 15px; }
-      label { display: block; margin-bottom: 5px; font-weight: 600; }
-      input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-      button { background: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
-      button:hover { background: #2980b9; }
-      .professors-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-      .professor-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.2s; }
-      .professor-card:hover { transform: translateY(-5px); }
-      .professor-card img { width: 100%; height: 150px; object-fit: cover; }
-      .professor-card .content { padding: 15px; }
-      .professor-card h3 { margin: 0 0 10px 0; color: #2c3e50; }
-      .professor-card .field { color: #7f8c8d; font-size: 14px; margin-bottom: 10px; }
-      .professor-card a { display: inline-block; background: #3498db; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; }
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+      body { font-family: 'Inter', sans-serif; }
+      .nordic-blue { color: #2c3e50; }
+      .nordic-light { background-color: #f8fafc; }
+      .nordic-white { background-color: white; }
+      .nordic-gray { color: #64748b; }
+      .nordic-accent { background-color: #3b82f6; }
+      .nordic-accent:hover { background-color: #2563eb; }
+      .nordic-green { background-color: #10b981; }
+      .nordic-green:hover { background-color: #059669; }
+      .nordic-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+        transition: all 0.3s ease;
+      }
+      .nordic-card:hover {
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+        transform: translateY(-2px);
+      }
     </style>
   </head>
-  <body>
-    <div class="container">
-      <h1 style="color: #2c3e50;">Nordic Design Professor Chatbot</h1>
-      <p>Create your own Nordic design professor chatbot and chat with existing ones.</p>
+  <body class="bg-nordic-light min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <!-- Header -->
+      <header class="text-center mb-16">
+        <h1 class="text-4xl font-bold nordic-blue mb-4">🎓 Nordic Design Professor</h1>
+        <p class="text-lg nordic-gray">Create your own Nordic design professor chatbot and chat with existing ones</p>
+      </header>
       
-      <div class="card">
-        <h2>Create Your Professor</h2>
-        <form id="createForm">
-          <div class="form-group">
-            <label for="name">Professor Name</label>
-            <input type="text" id="name" name="name" required placeholder="e.g., Jane Doe">
+      <!-- Create Professor Card -->
+      <div class="nordic-card p-8 mb-12">
+        <h2 class="text-2xl font-semibold nordic-blue mb-6">Create Your Professor</h2>
+        <form id="createForm" class="space-y-6">
+          <div>
+            <label for="name" class="block text-sm font-medium nordic-gray mb-2">Professor Name</label>
+            <input type="text" id="name" name="name" required placeholder="e.g., Jane Doe" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
           </div>
           
-          <div class="form-group">
-            <label for="field">Field of Expertise</label>
-            <select id="field" name="field" required>
+          <div>
+            <label for="field" class="block text-sm font-medium nordic-gray mb-2">Field of Expertise</label>
+            <select id="field" name="field" required class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
               <option value="">Select a field...</option>
               <option value="Industrial & Product Design">Industrial & Product Design</option>
               <option value="Furniture Design">Furniture Design</option>
@@ -54,18 +62,25 @@
             </select>
           </div>
           
-          <div class="form-group">
-            <label for="image">Professor Image (optional)</label>
-            <input type="file" id="image" name="image" accept="image/*">
+          <div>
+            <label for="image" class="block text-sm font-medium nordic-gray mb-2">Professor Image (optional)</label>
+            <input type="file" id="image" name="image" accept="image/*" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
           </div>
           
-          <button type="submit">Create Professor</button>
+          <button type="submit" class="nordic-accent text-white px-8 py-3 rounded-lg font-medium transition shadow-lg">
+            Create Professor
+          </button>
         </form>
       </div>
       
-      <div class="card">
-        <h2>Existing Professors</h2>
-        <div id="professorsGrid" class="professors-grid"></div>
+      <!-- Existing Professors -->
+      <div class="nordic-card p-8">
+        <h2 class="text-2xl font-semibold nordic-blue mb-6">Existing Professors</h2>
+        <div id="professorsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="col-span-full text-center py-8 nordic-gray">
+            <p>No professors yet. Create one above!</p>
+          </div>
+        </div>
       </div>
     </div>
     
@@ -77,18 +92,26 @@
           
           const container = document.getElementById('professorsGrid');
           if (professors.length === 0) {
-            container.innerHTML = '<p style="grid-column: 1/-1; color: #666;">No professors yet. Create one above!</p>';
+            container.innerHTML = '<div class="col-span-full text-center py-8 nordic-gray"><p>No professors yet. Create one above!</p></div>';
             return;
           }
           
           container.innerHTML = professors.map(p => `
-            <div class="professor-card">
-              <img src="${p.image}" alt="${p.name}">
-              <div class="content">
-                <h3>${p.name}</h3>
-                <p class="field">${p.field}</p>
-                <a href="/chat.html?id=${p.id}">Start Chatting</a>
-                <a href="/professors.html?id=${p.id}" style="background: #27ae60; margin-top: 5px; display: inline-block;">Edit Corpus</a>
+            <div class="nordic-card overflow-hidden group">
+              <div class="h-48 overflow-hidden">
+                <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+              </div>
+              <div class="p-6">
+                <h3 class="text-xl font-semibold nordic-blue mb-2">${p.name}</h3>
+                <p class="nordic-gray text-sm mb-4">${p.field}</p>
+                <div class="flex gap-3">
+                  <a href="/chat.html?id=${p.id}" class="nordic-accent text-white px-4 py-2 rounded-lg text-sm font-medium text-center transition flex-1">
+                    Start Chatting
+                  </a>
+                  <a href="/professors.html?id=${p.id}" class="nordic-green text-white px-4 py-2 rounded-lg text-sm font-medium text-center transition flex-1">
+                    Edit Corpus
+                  </a>
+                </div>
               </div>
             </div>
           `).join('');

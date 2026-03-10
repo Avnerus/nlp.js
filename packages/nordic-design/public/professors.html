@@ -1,47 +1,82 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Professor - Nordic Design Chatbot</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simple-styles@1.0.0/simple-styles.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      body { padding: 20px; background: #f5f5f5; }
-      .container { max-width: 1200px; margin: 0 auto; }
-      .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-      .info { background: #e8f4f8; padding: 15px; border-radius: 4px; margin-bottom: 20px; border-left: 4px solid #3498db; }
-      #corpusEditor { width: 100%; height: 500px; font-family: monospace; padding: 10px; border: 1px solid #ddd; border-radius: 4px; background: #fafafa; }
-      .btn-group { display: flex; gap: 10px; margin-top: 20px; }
-      .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; }
-      .btn-primary { background: #3498db; color: white; }
-      .btn-success { background: #27ae60; color: white; }
-      .btn-secondary { background: #95a5a6; color: white; }
-      .btn:hover { opacity: 0.9; }
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+      @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+      body { font-family: 'Inter', sans-serif; }
+      .nordic-blue { color: #2c3e50; }
+      .nordic-light { background-color: #f8fafc; }
+      .nordic-white { background-color: white; }
+      .nordic-gray { color: #64748b; }
+      .nordic-accent { background-color: #3b82f6; }
+      .nordic-accent:hover { background-color: #2563eb; }
+      .nordic-green { background-color: #10b981; }
+      .nordic-green:hover { background-color: #059669; }
+      .nordic-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+        transition: all 0.3s ease;
+      }
     </style>
   </head>
-  <body>
-    <div class="container">
-      <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h2 id="professorName" style="margin: 0;">Edit Professor</h2>
-          <div class="btn-group">
-            <a href="/" class="btn btn-secondary">Back to Home</a>
-            <a href="/chat.html" id="testChatBtn" class="btn btn-primary">Test Chatbot</a>
+  <body class="bg-nordic-light min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Header -->
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h1 id="professorName" class="text-3xl font-bold nordic-blue">Edit Professor</h1>
+          <p class="nordic-gray mt-1">Modify the chatbot's personality and knowledge</p>
+        </div>
+        <div class="flex gap-3">
+          <a href="/" class="px-6 py-2 border border-gray-200 rounded-lg nordic-gray hover:bg-gray-50 transition font-medium">
+            <i class="fas fa-arrow-left mr-2"></i> Back to Home
+          </a>
+          <a href="/chat.html" id="testChatBtn" class="nordic-accent text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition font-medium shadow-lg">
+            <i class="fas fa-comments mr-2"></i> Test Chatbot
+          </a>
+        </div>
+      </div>
+      
+      <!-- Professor Info Card -->
+      <div class="nordic-card p-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <p class="text-sm font-medium nordic-gray mb-1">Professor ID</p>
+            <p id="professorId" class="text-lg font-mono nordic-blue break-all">Loading...</p>
+          </div>
+          <div>
+            <p class="text-sm font-medium nordic-gray mb-1">Field</p>
+            <p id="professorField" class="text-lg nordic-blue">Loading...</p>
+          </div>
+          <div>
+            <p class="text-sm font-medium nordic-gray mb-1">Created</p>
+            <p id="professorCreated" class="text-lg nordic-blue">Loading...</p>
           </div>
         </div>
-        <div class="info">
-          <p><strong>ID:</strong> <span id="professorId"></span></p>
-          <p><strong>Field:</strong> <span id="professorField"></span></p>
-          <p><strong>Created:</strong> <span id="professorCreated"></span></p>
+      </div>
+      
+      <!-- Corpus Editor Card -->
+      <div class="nordic-card p-6">
+        <h2 class="text-xl font-semibold nordic-blue mb-4 flex items-center">
+          <i class="fas fa-code mr-2 text-blue-500"></i> Corpus JSON
+        </h2>
+        <p class="text-sm nordic-gray mb-4">Edit the chatbot's intents and responses. The JSON structure matches the standard NLP.js corpus format.</p>
+        
+        <div class="relative">
+          <textarea id="corpusEditor" class="w-full h-[500px] px-4 py-3 font-mono text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none" placeholder='{"data": []}'></textarea>
         </div>
         
-        <form id="corpusForm">
-          <label for="corpusEditor">Corpus JSON</label>
-          <textarea id="corpusEditor" name="corpus"></textarea>
-          <div class="btn-group">
-            <button type="submit" class="btn btn-success">Save Corpus</button>
-          </div>
-        </form>
+        <div class="mt-6 flex justify-end">
+          <button type="submit" form="corpusForm" class="nordic-green text-white px-8 py-3 rounded-lg font-medium transition shadow-lg">
+            <i class="fas fa-save mr-2"></i> Save Corpus
+          </button>
+        </div>
       </div>
     </div>
     
@@ -57,12 +92,12 @@
           document.getElementById('professorName').textContent = `Edit: ${data.name}`;
           document.getElementById('professorId').textContent = data.id;
           document.getElementById('professorField').textContent = data.field;
-          document.getElementById('professorCreated').textContent = new Date(data.createdAt).toLocaleString();
+          document.getElementById('professorCreated').textContent = new Date(data.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
           
           if (data.corpus) {
             document.getElementById('corpusEditor').value = JSON.stringify(data.corpus, null, 2);
           } else {
-            document.getElementById('corpusEditor').value = '{}';
+            document.getElementById('corpusEditor').value = JSON.stringify({ name: "Corpus", locale: "en-US", data: [] }, null, 2);
           }
           
           document.getElementById('testChatBtn').href = `/chat.html?id=${professorId}`;
