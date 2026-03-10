@@ -1,5 +1,4 @@
-import { get } from '@vercel/blob';
-import path from 'path';
+import { createNlp } from '../src/nlp-engine.js';
 
 export default async function handler(req, res) {
   // Enable CORS
@@ -16,15 +15,14 @@ export default async function handler(req, res) {
   }
   
   try {
-    const body = await req.json();
-    const { professorId, message, locale = 'en' } = body;
+    const { professorId, message, locale = 'en' } = req.body;
     
     if (!professorId || !message) {
       return res.status(400).json({ error: 'professorId and message are required' });
     }
     
     // Read professors list
-    const professorsBlob = await get('professors.json');
+    const professorsBlob = await fetch('https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/professors.json');
     let professors = [];
     if (professorsBlob && professorsBlob.text) {
       professors = JSON.parse(await professorsBlob.text());
@@ -37,7 +35,7 @@ export default async function handler(req, res) {
     }
     
     // Load corpus from Blob
-    const corpusBlob = await get(`corpora/${professorId}.json`);
+    const corpusBlob = await fetch(professor.corpus);
     let corpus = null;
     if (corpusBlob && corpusBlob.text) {
       corpus = JSON.parse(await corpusBlob.text());
@@ -48,7 +46,6 @@ export default async function handler(req, res) {
     }
     
     // Load NLP
-    const { createNlp } = await import('../src/nlp-engine.js');
     const nlp = await createNlp(corpus, locale);
     
     const response = await nlp.process(locale, message);

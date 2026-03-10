@@ -1,28 +1,20 @@
-import { get } from '@vercel/blob';
-import path from 'path';
-
 export default async function handler(req, res) {
-  if (req.method === 'GET') {
-    return getProfessor(req, res);
-  }
-  if (req.method === 'PUT') {
-    return updateProfessor(req, res);
+  if (req.method !== 'GET' && req.method !== 'PUT') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
   
-  return res.status(405).json({ error: 'Method not allowed' });
-}
-
-async function getProfessor(req, res) {
   try {
-    const professorId = req.query.id;
-    if (!professorId) {
-      return res.status(400).json({ error: 'Professor ID required' });
-    }
-    
-    const professorsBlob = await get('professors.json');
+    // Read professors from Vercel Blob
+    const professorsBlob = await fetch("https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/professors.json");
     let professors = [];
     if (professorsBlob && professorsBlob.text) {
       professors = JSON.parse(await professorsBlob.text());
+    }
+    
+    // Find professor by ID
+    const professorId = req.query.id || req.query.id;
+    if (!professorId) {
+      return res.status(400).json({ error: 'Professor ID required' });
     }
     
     const professor = professors.find(p => p.id === professorId);
@@ -30,40 +22,34 @@ async function getProfessor(req, res) {
       return res.status(404).json({ error: 'Professor not found' });
     }
     
-    const corpusBlob = await get(`corpora/${professorId}.json`);
-    let corpus = null;
-    if (corpusBlob && corpusBlob.text) {
-      corpus = JSON.parse(await corpusBlob.text());
+    console.log(professor);
+    if (req.method === 'GET') {
+      // Load corpus from Vercel Blob
+      const corpusBlob = await fetch(professor.corpus);
+      let corpus = null;
+      if (corpusBlob && corpusBlob.text) {
+        corpus = JSON.parse(await corpusBlob.text());
+      }
+      
+      return res.status(200).json({
+        ...professor,
+        corpus
+      });
     }
     
-    return res.status(200).json({
-      ...professor,
-      corpus
-    });
-  } catch (err) {
-    console.error('Error fetching professor:', err);
-    res.status(500).json({ error: 'Failed to fetch professor' });
-  }
-}
-
-async function updateProfessor(req, res) {
-  try {
-    const professorId = req.query.id;
-    if (!professorId) {
-      return res.status(400).json({ error: 'Professor ID required' });
+    if (req.method === 'PUT') {
+      const { corpus } = req.body;
+      // Save corpus to Vercel Blob
+      await put(`corpora/${professorId}.json`, JSON.stringify(corpus, null, 2), { 
+        access: 'public',
+        cacheControl: 'no-cache',
+        addRandomSuffix: false  // ← keeps the exact filename
+      });
+      
+      return res.status(200).json(professor);
     }
-    
-    const body = await req.json();
-    const { corpus } = body;
-    
-    await put(`corpora/${professorId}.json`, JSON.stringify(corpus, null, 2), { 
-      access: 'public',
-      cacheControl: 'no-cache'
-    });
-    
-    return res.status(200).json({ id: professorId });
   } catch (err) {
-    console.error('Error updating professor:', err);
-    res.status(500).json({ error: 'Failed to update professor' });
+    console.error('Error handling professor:', err);
+    res.status(500).json({ error: 'Failed to process professor' });
   }
 }

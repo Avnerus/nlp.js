@@ -155,7 +155,8 @@
           
           if (response.ok && data) {
             const botMessage = data.response || data;
-            addMessage(botMessage, 'bot');
+            console.log(botMessage);
+            addMessage(botMessage.answer, 'bot');
           } else {
             addMessage('Sorry, I encountered an error processing your message.', 'bot');
           }

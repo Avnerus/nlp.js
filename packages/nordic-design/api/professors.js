@@ -13,6 +13,10 @@ export default async function handler(req, res) {
     return listProfessors(req, res);
   }
   if (req.method === 'POST') {
+    
+    req.on('data', (chunk) => {
+        // TODO: weird fix to get busboy to start processing
+    });
     return createProfessor(req, res);
   }
   
@@ -49,6 +53,7 @@ async function parseFormData(req) {
 
     bb.on('error', reject);
 
+    req.resume();
     req.pipe(bb);
   });
 }
@@ -83,13 +88,13 @@ async function createProfessor(req, res) {
       imageUrl = url;
     }
     
-    const templatePath = path.join(__dirname, '..', 'corpus-en.json');
-    const template = await import(templatePath);
+    const template = await (await fetch('https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/corpus-en.json')).text();
     const newId = `prof_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    const corpusBlob = await put(`corpora/${newId}.json`, JSON.stringify(template, null, 2), { 
+    const corpusBlob = await put(`corpora/${newId}.json`, template, { 
       access: 'public',
-      cacheControl: 'no-cache'
+      cacheControl: 'no-cache',
+      addRandomSuffix: false,  // ← keeps the exact filename
     });
     const corpusUrl = corpusBlob.url;
     
@@ -112,7 +117,8 @@ async function createProfessor(req, res) {
     
     await put('professors.json', JSON.stringify(professors, null, 2), { 
       access: 'public',
-      cacheControl: 'no-cache'
+      cacheControl: 'no-cache',
+      addRandomSuffix: false
     });
     
     res.status(201).json(professor);

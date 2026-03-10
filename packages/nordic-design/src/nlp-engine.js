@@ -1,4 +1,14 @@
 import { dockStart } from '@nlpjs/basic';
+const SETTINGS = 
+{
+  settings: {
+    nlp: {
+      corpora: [
+      ]
+    }
+  },
+  use: ["Basic"]
+}
 
 /**
  * Create an NLP instance from a custom corpus file
@@ -6,12 +16,9 @@ import { dockStart } from '@nlpjs/basic';
  * @param {string} locale - Language locale (default: 'en')
  * @returns {Promise<object>} NLP manager instance
  */
-export async function createNlp(corpusPath, locale = 'en') {
-  const dock = await dockStart();
+export async function createNlp(corpus, locale = 'en') {
+  const dock = await dockStart(SETTINGS);
   const nlp = dock.get('nlp');
-  
-  // Load corpus file
-  const corpus = await import(corpusPath);
   
   // Add intents and answers from corpus
   for (const item of corpus.data) {
