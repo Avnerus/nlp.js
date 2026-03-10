@@ -68,6 +68,39 @@ We need to build a web application where students can create custom chatbots mod
 
 ---
 
+## Key Fixes Applied (Study Summary)
+
+**1. Vercel Blob URL-Only Access**
+- Vercel Blob only returns URLs from `put()`; no `get()` function exists
+- All data fetches use `fetch(blobUrl)` with the URLs stored in `professors.json`
+- Both `professors.json` and `corpus-en.json` use `addRandomSuffix: false` for stable URLs
+
+**2. FormData Handling**
+- `req.formData()` not available on Vercel Serverless
+- Fixed with `busboy` stream parsing (`bodyParser: false` in `config.api`)
+- Added `req.resume()` to consume request body before piping to busboy
+- Minor workaround: empty `req.on('data', ...)` handler triggers busboy processing
+
+**3. Corpus Loading Architecture**
+- Removed `import()` for local JSON (not compatible with Vercel Blob)
+- Template corpus hardcoded in `/api/init.js` → stored as Blob URL
+- Each professor's corpus is fetched via `fetch(professor.corpus)` at runtime
+
+**4. API Simplifications**
+- `/api/professors/init.js` removed; consolidated into `/api/init.js`
+- `/api/professors/[id].js` simplified: GET/PUT logic merged into single handler
+- Removed `get()` calls from Vercel Blob SDK usage
+
+**5. NLP.js Engine Changes**
+- `createNlp()` now accepts corpus JSON directly (not a path)
+- Removed file system import; accepts parsed JSON object
+
+**6. Vercel Configuration**
+- Added `((?!api/).*)` rewrite pattern to serve static files while preserving API routes
+- Prevents `/api/*` requests from being redirected to `/public/api/*`
+
+---
+
 ## Implementation Steps
 
 ### Phase 1: Backend Infrastructure (Blob-based)
@@ -77,8 +110,8 @@ We need to build a web application where students can create custom chatbots mod
    - Configure `BLOB_READ_WRITE_TOKEN` in `.env.local`
 
 2. **Initialize professors.json**
-   - `GET /api/professors/init` — create empty `professors.json` in Blob with `addRandomSuffix: false`
-   - Hardcoded URL stored in `listProfessors()` for fetching the index
+   - `GET /api/init` — create `professors.json` and `corpus-en.json` in Blob with `addRandomSuffix: false`
+   - Both URLs returned and used as hardcoded references
 
 3. **Implement `/api/professors` routes**
    - `GET /api/professors` — return JSON array of all professors from Blob (using hardcoded URL)
@@ -256,6 +289,18 @@ All data is stored in Vercel Blob (cloud storage):
 - **Push target:** `git@github.com:Avnerus/nlp.js.git`
 - **Blob storage:** `vercel_blob_rw_0tq3xJdZh1emKCko_poIWDphXoScx6cxoRx7xFOu8FiHPl5`
 - **Hardcoded index URL:** `https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/professors.json`
+- **Hardcoded corpus URL:** `https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/corpus-en.json`
+- **Init endpoint:** `GET /api/init` creates both `professors.json` and `corpus-en.json` in Blob
+
+---
+
+## Key Constraints (Vercel Blob Limitations)
+
+- **No `get()` function** — only `put()` returns a URL, which must be used for subsequent fetching
+- **No `fetch()` on server-side** — use `@vercel/blob` `get()` equivalent via `fetch(blobUrl)` on the stored URL
+- **FormData parsing** — `req.formData()` not available; set `bodyParser: false` and use `busboy` instead
+- **No dynamic imports of local JSON** — corpora must be fetched from Blob URLs at runtime
+- **Static corpora** — template corpus is hardcoded in `/api/init.js` instead of being imported from `corpus-en.json`
 
 ---
 
