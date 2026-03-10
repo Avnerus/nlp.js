@@ -1,5 +1,11 @@
-import { get, put } from '@vercel/blob';
+import { put } from '@vercel/blob';
 import path from 'path';
+
+export const config = {
+api: {
+  bodyParser: false,
+}
+};
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
@@ -14,10 +20,10 @@ export default async function handler(req, res) {
 
 async function listProfessors(req, res) {
   try {
-    const professorsBlob = await get('professors.json');
+    const professorsBlob = await fetch("https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/professors.json");
     let professors = [];
-    if (professorsBlob && professorsBlob.text) {
-      professors = JSON.parse(await professorsBlob.text());
+    if (professorsBlob)  {
+      professors = await professorsBlob.json()
     }
     
     res.status(200).json(professors);
@@ -50,10 +56,11 @@ async function createProfessor(req, res) {
     const template = await import(templatePath);
     const newId = `prof_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    await put(`corpora/${newId}.json`, JSON.stringify(template, null, 2), { 
+    const corpusBlob = await put(`corpora/${newId}.json`, JSON.stringify(template, null, 2), { 
       access: 'public',
       cacheControl: 'no-cache'
     });
+    const corpusUrl = corpusBlob.url;
     
     let professors = [];
     const professorsBlob = await get('professors.json');
@@ -66,7 +73,7 @@ async function createProfessor(req, res) {
       name,
       field,
       image: imageUrl,
-      corpus: `corpora/${newId}.json`,
+      corpus: corpusUrl,
       createdAt: new Date().toISOString()
     };
     
