@@ -1,0 +1,242 @@
+# PLAN.md - Nordic Design Professor Chatbot
+
+> **Project:** `nordic-design` package in `nlp.js` monorepo  
+> **Target deployment:** Vercel Serverless (API routes + static frontend)  
+> **Current status:** Base structure exists, needs full implementation per DESIGN.md
+
+---
+
+## Overview
+
+We need to build a web application where students can create custom chatbots modeled after Nordic design professors. The app should allow:
+
+1. Creating a professor profile (name, image, field)
+2. "Coding" the chatbot by modifying its behavior via JSON corpus
+3. Testing the chatbot with a live preview
+4. Chatting with existing professors
+
+---
+
+## Architecture
+
+### Backend (Vercel Serverless)
+
+```
+/api/
+  ├── professors/
+  │   ├── GET         // List all professors
+  │   └── POST        // Create new professor
+  │
+  ├── professors/[id]/
+  │   ├── GET         // Get professor details + corpus
+  │   └── PUT         // Update professor corpus
+  │
+  ├── chat/
+  │   └── POST        // Process user message → return chatbot response
+  │
+  └── image-upload/
+      └── POST        // Handle image upload, return URL/path
+```
+
+### Data Storage
+
+- **Professors metadata:** JSON file in Vercel storage (`/data/professors.json`)
+  ```json
+  [
+    {
+      "id": "uuid",
+      "name": "Jane Doe",
+      "field": "Industrial & Product Design",
+      "imagePath": "/images/professors/uuid.jpg",
+      "corpusPath": "/corpora/professors/uuid.json",
+      "createdAt": "2026-03-10T..."
+    }
+  ]
+  ```
+
+- **Corpora:** Each professor has their own `corpus-*.json` based on the template in `corpus-en.json`
+- **Images:** Stored in `/public/images/professors/` (Vercel public folder)
+
+### Frontend (Static Pages)
+
+```
+/pages/
+  ├── index.jsx           // Professor listing + create form
+  ├── professors/[id].jsx // Professor profile + corpus editor
+  ├── chat/[id].jsx       // Chat interface
+  └── _app.jsx            // Global wrapper
+```
+
+---
+
+## Implementation Steps
+
+### Phase 1: Backend Infrastructure
+
+1. **Create `/data` and `/public` directories** in the package
+   - `/data/professors.json` — master index
+   - `/public/images/professors/` — professor avatars
+   - `/public/corpora/professors/` — dynamic corpora (optional, can be same as data)
+
+2. **Implement `/api/professors` routes**
+   - `GET /api/professors` — return JSON array of all professors
+   - `POST /api/professors` — create professor, generate UUID, save metadata
+
+3. **Implement `/api/professors/[id]` routes**
+   - `GET /api/professors/[id]` — return professor + corpus
+   - `PUT /api/professors/[id]` — save updated corpus
+
+4. **Implement `/api/chat` route**
+   - Accept `{ professorId, message, locale }`
+   - Load professor's corpus
+   - Initialize NLP.js with that corpus
+   - Return chatbot response
+
+5. **Add image upload handler** (`/api/image-upload`)
+   - Accept multipart form data
+   - Save to `/public/images/professors/[professorId].jpg`
+   - Return URL path
+
+---
+
+### Phase 2: NLP.js Integration
+
+The current `index.js` is just a placeholder. We need to:
+
+1. **Create `src/nlp-engine.js`** — reusable NLP engine factory
+
+   ```javascript
+   const { dockStart } = require('@nlpjs/basic');
+   
+   async function createNlp(corpusPath, locale = 'en') {
+     const dock = await dockStart();
+     const nlp = dock.get('nlp');
+     
+     // Load corpus dynamically
+     const corpus = require(corpusPath);
+     // Apply corpus to NLP manager...
+     
+     await nlp.train();
+     return nlp;
+   }
+   
+   module.exports = { createNlp };
+   ```
+
+2. **Modify corpus loading in `/api/chat`**
+   - Load professor's custom corpus (not `corpus-en.json`)
+   - Use `createNlp(professor.corpusPath)` for each chat request
+
+3. **Test locally** with `vercel dev`
+
+---
+
+### Phase 3: Frontend
+
+1. **Create `/pages/index.jsx`**
+   - `GET /api/professors` → render list of existing professors
+   - Form to create new professor:
+     - Name input
+     - Field dropdown (10 options from DESIGN.md)
+     - Image upload → POST to `/api/image-upload`
+     - Submit → POST to `/api/professors`
+
+2. **Create `/pages/professors/[id].jsx`**
+   - `GET /api/professors/[id]` → load professor + corpus
+   - JSON editor (Ace Editor or CodeMirror)
+   - "Save" button → `PUT /api/professors/[id]`
+   - "Test Chatbot" link → `/chat/[id]`
+
+3. **Create `/pages/chat/[id].jsx`**
+   - Render professor image/name at top
+   - Chat UI (input + message list)
+   - `POST /api/chat` with `{ professorId, message }`
+   - Stream/return responses
+
+---
+
+### Phase 4: Corpora Management
+
+The `corpus-en.json` template should be the base for all professors. We need:
+
+1. **Create `src/corpus-template.json`** — copy of `corpus-en.json` with placeholders
+2. **Modify corpus loading logic** to handle professor-specific fields:
+   - `{{ professorName }}`
+   - `{{ field }}`
+   - `{{ university }}` (future expansion)
+
+3. **On professor creation**, copy template → custom corpus file
+
+---
+
+### Phase 5: Polish & Testing
+
+1. **Add error handling** — professor not found, corpus invalid, etc.
+2. **Add CORS headers** for Vercel serverless
+3. **Test locally** with Vercel dev
+4. **Add basic styling** (Tailwind or plain CSS)
+5. **Deploy to Vercel** and test live
+
+---
+
+## Dependencies to Add
+
+```json
+// package.json
+{
+  "dependencies": {
+    "@nlpjs/basic": "4.27.0",
+    "@nlpjs/console-connector": "^4.26.1",
+    "@nlpjs/core-loader": "^4.26.1",
+    "@nlpjs/evaluator": "^4.26.1",
+    "@nlpjs/lang-en": "^4.26.1",
+    "@nlpjs/logger": "^4.26.1",
+    "@nlpjs/nlp": "^4.27.0",
+    "cors": "^2.8.5",           // For Vercel API routes
+    "busboy": "^1.6.0"          // For image upload parsing
+  }
+}
+```
+
+---
+
+## Vercel Configuration
+
+Create `vercel.json` in the package root:
+
+```json
+{
+  "version": 2,
+  "builds": [
+    { "src": "api/**/*.js", "use": "@vercel/node" },
+    { "src": "public/**/*", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/(.*)", "dest": "/$1" }
+  ]
+}
+```
+
+---
+
+## Future Enhancements (Out of Scope)
+
+- Multi-language support (`lang-fi`, `lang-sv`, `lang-nb`)
+- Professor customization (personality traits)
+- Export corpus as JSON
+- Share professor URL
+- Chat history persistence
+- Admin dashboard
+
+---
+
+## Notes
+
+- **Current model:** `local-llama/qwen3-coder-next` (runtime) / `default_model` same
+- **Workspace:** `/home/nixos/.openclaw/workspace/projects/nlp.js`
+- **Push target:** `git@github.com:Avnerus/nlp.js.git`
+
+---
+
+**Ready for review.** Once approved, I'll implement phase by phase and push changes.
