@@ -5,6 +5,7 @@
   "author": "avnerus <avnerus@gmail.com>",
   "homepage": "https://github.com/Avnerus/nlp.js/tree/main/packages/nordic-design#readme",
   "license": "ISC",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Avnerus/nlp.js.git"
