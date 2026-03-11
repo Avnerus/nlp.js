@@ -47,6 +47,37 @@
         letter-spacing: 0.05em;
         margin-bottom: 0.5rem;
       }
+      .delete-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(239, 68, 68, 0.9);
+        border: 2px solid white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transform: scale(0.8);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        z-index: 20;
+      }
+      .delete-btn:hover {
+        opacity: 1;
+        transform: scale(1.1) rotate(10deg);
+        background: #ef4444;
+      }
+      .group:hover .delete-btn {
+        opacity: 1;
+        transform: scale(1);
+      }
+      .nordic-card:hover {
+        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+        transform: translateY(-4px);
+      }
     </style>
   </head>
   <body class="min-h-screen">
@@ -160,7 +191,12 @@
           }
           
           container.innerHTML = professors.map(p => `
-            <div class="nordic-card overflow-hidden group">
+            <div class="nordic-card overflow-hidden group relative">
+              <button class="delete-btn" onclick="confirmDelete('${p.id}', '${p.name}')">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+              </button>
               <div class="h-56 overflow-hidden relative">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent z-10"></div>
                 <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
@@ -210,6 +246,32 @@
       });
       
       loadProfessors();
+      
+      // Delete professor confirmation and execution
+      window.confirmDelete = async function(id, name) {
+        if (!confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
+          return;
+        }
+        
+        try {
+          const response = await fetch('/api/professors', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+          });
+          
+          if (response.ok) {
+            alert('Professor deleted successfully!');
+            loadProfessors();
+          } else {
+            const err = await response.json();
+            alert(`Error: ${err.error}`);
+          }
+        } catch (err) {
+          console.error('Failed to delete professor:', err);
+          alert('Failed to delete professor');
+        }
+      };
     </script>
   </body>
 </html>

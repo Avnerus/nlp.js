@@ -19,6 +19,9 @@ export default async function handler(req, res) {
     });
     return createProfessor(req, res);
   }
+  if (req.method === 'DELETE') {
+    return deleteProfessor(req, res);
+  }
   
   return res.status(405).json({ error: 'Method not allowed' });
 }
@@ -125,5 +128,72 @@ async function createProfessor(req, res) {
   } catch (err) {
     console.error('Error creating professor:', err);
     res.status(500).json({ error: 'Failed to create professor' });
+  }
+}
+
+async function deleteProfessor(req, res) {
+  try {
+    const { id } = req.body;
+    
+    if (!id) {
+      return res.status(400).json({ error: 'Professor ID is required' });
+    }
+    
+    // Fetch current professors list
+    const professorsBlob = await fetch("https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/professors.json");
+    let professors = [];
+    if (professorsBlob && professorsBlob.ok) {
+      professors = await professorsBlob.json();
+    }
+    
+    // Find the professor to delete
+    const professorIndex = professors.findIndex(p => p.id === id);
+    if (professorIndex === -1) {
+      return res.status(404).json({ error: 'Professor not found' });
+    }
+    
+    const professor = professors[professorIndex];
+    
+    // Delete the professor's image from blob
+    if (professor.image && !professor.image.includes('default-professor.jpg')) {
+      try {
+        // Extract the path from the blob URL
+        const imagePath = professor.image.replace('https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/', '');
+        await put(imagePath, null, { 
+          access: 'public',
+          cacheControl: 'no-cache'
+        });
+      } catch (err) {
+        console.error('Error deleting image:', err);
+      }
+    }
+    
+    // Delete the professor's corpus from blob
+    if (professor.corpus) {
+      try {
+        const corpusPath = professor.corpus.replace('https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/', '');
+        await put(corpusPath, null, { 
+          access: 'public',
+          cacheControl: 'no-cache'
+        });
+      } catch (err) {
+        console.error('Error deleting corpus:', err);
+      }
+    }
+    
+    // Remove from professors array
+    professors.splice(professorIndex, 1);
+    
+    // Update professors.json
+    await put('professors.json', JSON.stringify(professors, null, 2), { 
+      access: 'public',
+      cacheControl: 'no-cache',
+      addRandomSuffix: false
+    });
+    
+    res.status(200).json({ success: true, message: 'Professor deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting professor:', err);
+    res.status(500).json({ error: 'Failed to delete professor' });
   }
 }
