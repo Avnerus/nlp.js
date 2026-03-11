@@ -201,6 +201,47 @@
       });
       
       loadProfessor();
+      
+      // Handle keyboard resize on mobile
+      function adjustForKeyboard() {
+        const input = document.getElementById('messageInput');
+        const messagesDiv = document.getElementById('chatMessages');
+        
+        if (!input || !messagesDiv) return;
+        
+        // When input is focused, adjust messages container height
+        const isFocused = document.activeElement === input;
+        
+        if (isFocused) {
+          // Account for keyboard height (estimate 300-400px on mobile)
+          const viewportHeight = window.innerHeight;
+          const headerHeight = document.querySelector('header')?.offsetHeight || 80;
+          const professorHeight = document.querySelector('.nordic-card.p-4')?.offsetHeight || 100;
+          const inputHeight = document.querySelector('.nordic-card.p-3')?.offsetHeight || 70;
+          
+          // Calculate remaining space
+          const remainingHeight = viewportHeight - headerHeight - professorHeight - inputHeight - 30;
+          messagesDiv.style.maxHeight = remainingHeight + 'px';
+        } else {
+          messagesDiv.style.maxHeight = 'none';
+        }
+      }
+      
+      // Listen for keyboard events
+      const messageInput = document.getElementById('messageInput');
+      messageInput?.addEventListener('focus', adjustForKeyboard);
+      messageInput?.addEventListener('blur', adjustForKeyboard);
+      window.addEventListener('resize', adjustForKeyboard);
+      
+      // Also ensure messages area scrolls correctly when keyboard appears
+      let lastScrollTop = 0;
+      const messagesDiv = document.getElementById('chatMessages');
+      messagesDiv?.addEventListener('scroll', () => {
+        lastScrollTop = messagesDiv.scrollTop;
+      });
+      
+      // Initial adjustment
+      adjustForKeyboard();
     </script>
   </body>
 </html>
