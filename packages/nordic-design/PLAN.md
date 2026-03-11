@@ -68,6 +68,17 @@ We need to build a web application where students can create custom chatbots mod
 
 ---
 
+## Vercel Deployment
+
+**Token location:** `/run/secrets/vercel-token`  
+**Command:** `npx vercel --prod -t "$VERCEL_TOKEN" --yes`
+
+To deploy:
+1. Export the token: `export VERCEL_TOKEN=$(cat /run/secrets/vercel-token)`
+2. Run: `npx vercel --prod -t "$VERCEL_TOKEN" --yes`
+
+---
+
 ## Key Fixes Applied (Study Summary)
 
 **1. Vercel Blob URL-Only Access**
