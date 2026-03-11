@@ -44,6 +44,39 @@
       .nordic-btn {
         display: inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold transition shadow-md hover:shadow-lg;
       }
+      .guide-link {
+        color: #2563eb;
+        text-decoration: none;
+        font-weight: 500;
+      }
+      .guide-link:hover {
+        text-decoration: underline;
+      }
+      .guide-section {
+        background: #eff6ff;
+        border-left: 4px solid #3b82f6;
+        padding: 16px;
+        margin: 16px 0;
+        border-radius: 0 8px 8px 0;
+      }
+      .guide-section h3 {
+        margin: 0 0 8px 0;
+        color: #1e40af;
+        font-size: 1.1rem;
+      }
+      .guide-section p {
+        margin: 0 0 12px 0;
+        color: #374151;
+        line-height: 1.6;
+      }
+      .guide-section code {
+        background: #f3f4f6;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9em;
+        color: #1f2937;
+      }
     </style>
   </head>
   <body class="min-h-screen">
@@ -113,6 +146,122 @@
           Edit the chatbot's intents and responses. The JSON structure matches the standard NLP.js corpus format. 
           Each intent contains utterances (phrases that trigger it) and answers (responses to give).
         </p>
+        
+        <!-- Corpus Writing Guide -->
+        <div class="nordic-card p-6 mb-6">
+          <div class="flex items-center gap-2 mb-4">
+            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <h3 class="text-lg font-bold nordic-blue">Corpus Writing Guide</h3>
+            <a href="https://nlp.js.org/docs/en/guide/corpus.html" target="_blank" rel="noopener noreferrer" class="guide-link text-sm ml-auto">
+              Full NLP.js Corpus Documentation &rarr;
+            </a>
+          </div>
+          
+          <div class="space-y-4 text-sm">
+            <div class="guide-section">
+              <h3>What is a Corpus?</h3>
+              <p>A corpus is a JSON file that defines what your chatbot knows. It contains <strong>intents</strong> - groups of phrases (utterances) that trigger specific responses (answers).</p>
+            </div>
+            
+            <div class="guide-section">
+              <h3>Basic Structure</h3>
+              <p>Each intent has three parts:</p>
+              <ul class="list-disc list-inside space-y-1 ml-4 text-gray-700">
+                <li><code>intent</code> - A unique name for this intent</li>
+                <li><code>utterances</code> - Array of phrases that trigger it</li>
+                <li><code>answers</code> - Array of possible responses</li>
+              </ul>
+              <div class="bg-white p-4 rounded-lg mt-3 font-mono text-xs overflow-x-auto">
+                <pre><code>{
+  "intent": "greetings.hello",
+  "utterances": ["hello", "hi", "hey"],
+  "answers": ["Hello!", "Hi there!", "Greetings!"]
+}</code></pre>
+              </div>
+            </div>
+            
+            <div class="guide-section">
+              <h3>Simple Answers</h3>
+              <p>Just list text responses - the chatbot will pick one at random:</p>
+              <div class="bg-white p-4 rounded-lg mt-3 font-mono text-xs overflow-x-auto">
+                <pre><code>{
+  "intent": "agent.age",
+  "utterances": ["how old are you", "your age"],
+  "answers": ["I'm very young", "I was created recently"]
+}</code></pre>
+              </div>
+            </div>
+            
+            <div class="guide-section">
+              <h3>Conditional Answers</h3>
+              <p>Use the <code>opts</code> field for conditional responses based on context:</p>
+              <div class="bg-white p-4 rounded-lg mt-3 font-mono text-xs overflow-x-auto">
+                <pre><code>{
+  "intent": "agent.whereami",
+  "utterances": ["where am i"],
+  "answers": [
+    { "answer": "You're on mobile", "opts": "channel==='telegram'" },
+    { "answer": "You're on desktop", "opts": "channel==='web'" }
+  ]
+}</code></pre>
+              </div>
+            </div>
+            
+            <div class="guide-section">
+              <h3>Template Variables</h3>
+              <p>Use <code>{{ variable }}</code> to insert dynamic values:</p>
+              <div class="bg-white p-4 rounded-lg mt-3 font-mono text-xs overflow-x-auto">
+                <pre><code>{
+  "intent": "agent.whereami",
+  "utterances": ["where am i"],
+  "answers": ["You're talking from {{ channel }}"]
+}</code></pre>
+              </div>
+            </div>
+            
+            <div class="guide-section">
+              <h3>Common Intents to Include</h3>
+              <p>Start with these fundamental intents:</p>
+              <div class="bg-white p-4 rounded-lg mt-3 space-y-2 font-mono text-xs overflow-x-auto">
+                <pre><code>// Agent identity
+- agent.acquaintance: "who are you", "what are you"
+- agent.age: "how old", "your age"
+- agent.whereami: "where am i", "where are we"
+
+// Greetings
+- greetings.hello: "hello", "hi", "hey"
+- greetings.bye: "goodbye", "bye", "see you"
+
+// Help/Support
+- help: "help", "what can you do", "how do I"
+
+// Small talk
+- yes: "yes", "yeah", "yep"
+- no: "no", "nope", "nah"</code></pre>
+              </div>
+            </div>
+            
+            <div class="guide-section">
+              <h3>Full Corpus Structure</h3>
+              <p>Your corpus must be wrapped in an object with <code>name</code>, <code>locale</code>, and <code>data</code> fields:</p>
+              <div class="bg-white p-4 rounded-lg mt-3 font-mono text-xs overflow-x-auto">
+                <pre><code>{
+  "name": "Corpus",
+  "locale": "en-US",
+  "data": [
+    {
+      "intent": "intent.name",
+      "utterances": ["phrase 1", "phrase 2"],
+      "answers": ["response 1", "response 2"]
+    }
+  ]
+}</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
         
         <div class="relative">
           <textarea id="corpusEditor" class="nordic-input w-full h-[600px] px-6 py-4 font-mono text-sm rounded-xl transition resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder='{"data": []}'></textarea>
