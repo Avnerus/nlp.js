@@ -7,7 +7,9 @@ export default async function handler(req, res) {
   
   try {
     // Read professors from Vercel Blob
-    const professorsBlob = await fetch("https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/professors.json");
+    const professorsBlob = await fetch("https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/professors.json", {
+      cache: 'no-store'
+    });
     let professors = [];
     if (professorsBlob && professorsBlob.text) {
       professors = JSON.parse(await professorsBlob.text());
@@ -27,7 +29,9 @@ export default async function handler(req, res) {
     console.log(professor);
     if (req.method === 'GET') {
       // Load corpus from Vercel Blob
-      const corpusBlob = await fetch(professor.corpus);
+      const corpusBlob = await fetch(professor.corpus, {
+        cache: 'no-store'
+      });
       let corpus = null;
       if (corpusBlob && corpusBlob.text) {
         corpus = JSON.parse(await corpusBlob.text());
@@ -44,8 +48,9 @@ export default async function handler(req, res) {
       // Save corpus to Vercel Blob
       await put(`corpora/${professorId}.json`, JSON.stringify(corpus, null, 2), { 
         access: 'public',
-        cacheControl: 'no-cache',
-        addRandomSuffix: false  // ← keeps the exact filename
+        cacheControlMaxAge: 0,
+        cacheTtl: 0,
+        addRandomSuffix: false
       });
       
       return res.status(200).json(professor);

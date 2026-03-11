@@ -63,7 +63,9 @@ async function parseFormData(req) {
 
 async function listProfessors(req, res) {
   try {
-    const professorsBlob = await fetch("https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/professors.json");
+    const professorsBlob = await fetch("https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/professors.json", {
+      cache: 'no-store'
+    });
     let professors = [];
     if (professorsBlob)  {
       professors = await professorsBlob.json()
@@ -86,23 +88,30 @@ async function createProfessor(req, res) {
     if (imageFile) {
       const { url } = await put(`images/professors/${imageFile.name}`, imageFile.buffer, { 
         access: 'public',
-        cacheControl: 'public, max-age=31536000, immutable'
+        cacheControlMaxAge: 31536000,
+        cacheTtl: 31536000,
+        addRandomSuffix: false
       });
       imageUrl = url;
     }
     
-    const template = await (await fetch('https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/corpus-en.json')).text();
+    const template = await (await fetch('https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/corpus-en.json', {
+      cache: 'no-store'
+    })).text();
     const newId = `prof_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     const corpusBlob = await put(`corpora/${newId}.json`, template, { 
       access: 'public',
-      cacheControl: 'no-cache',
-      addRandomSuffix: false,  // ← keeps the exact filename
+      cacheControlMaxAge: 0,
+      cacheTtl: 0,
+      addRandomSuffix: false,
     });
     const corpusUrl = corpusBlob.url;
     
     let professors = [];
-    const professorsBlob = await fetch("https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/professors.json");
+    const professorsBlob = await fetch("https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/professors.json", {
+      cache: 'no-store'
+    });
     if (professorsBlob && professorsBlob.ok) {
       professors = await professorsBlob.json();
     }
@@ -120,7 +129,8 @@ async function createProfessor(req, res) {
     
     await put('professors.json', JSON.stringify(professors, null, 2), { 
       access: 'public',
-      cacheControl: 'no-cache',
+      cacheControlMaxAge: 0,
+      cacheTtl: 0,
       addRandomSuffix: false
     });
     
@@ -140,7 +150,9 @@ async function deleteProfessor(req, res) {
     }
     
     // Fetch current professors list
-    const professorsBlob = await fetch("https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/professors.json");
+    const professorsBlob = await fetch("https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/professors.json", {
+      cache: 'no-store'
+    });
     let professors = [];
     if (professorsBlob && professorsBlob.ok) {
       professors = await professorsBlob.json();
@@ -161,7 +173,8 @@ async function deleteProfessor(req, res) {
         const imagePath = professor.image.replace('https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/', '');
         await put(imagePath, null, { 
           access: 'public',
-          cacheControl: 'no-cache'
+          cacheControlMaxAge: 0,
+          cacheTtl: 0
         });
       } catch (err) {
         console.error('Error deleting image:', err);
@@ -174,7 +187,8 @@ async function deleteProfessor(req, res) {
         const corpusPath = professor.corpus.replace('https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/', '');
         await put(corpusPath, null, { 
           access: 'public',
-          cacheControl: 'no-cache'
+          cacheControlMaxAge: 0,
+          cacheTtl: 0
         });
       } catch (err) {
         console.error('Error deleting corpus:', err);
@@ -187,7 +201,8 @@ async function deleteProfessor(req, res) {
     // Update professors.json
     await put('professors.json', JSON.stringify(professors, null, 2), { 
       access: 'public',
-      cacheControl: 'no-cache',
+      cacheControlMaxAge: 0,
+      cacheTtl: 0,
       addRandomSuffix: false
     });
     
