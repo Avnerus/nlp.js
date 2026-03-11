@@ -21,6 +21,7 @@ export async function createNlp(corpus, locale = 'en') {
   const nlp = dock.get('nlp');
   
   // Add intents and answers from corpus
+  nlp.addLanguage(corpus.locale);
   for (const item of corpus.data) {
     const { intent, utterances, answers } = item;
     
