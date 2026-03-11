@@ -11,19 +11,24 @@ export default async function handler(req, res) {
 {
   "name": "Corpus",
   "locale": "en-US",
-  "data": [
-    {
-      "intent": "agent.whereami",
-      "utterances": [
-        "where am i",
-        "where am i talking"
-      ],
-      "answers": [
-        { "answer": "you're talking from console, app is {{ app }} channel is {{ channel }}", "opts": "channel==='console'" },
-        { "answer": "you're talking from directline, app is {{ app }} channel is {{ channel }}", "opts": "channel==='directline'" },
-        { "answer": "you're talking from microsoft emulator, app is {{ app }} channel is {{ channel }}", "opts": "channel==='msbf-emulator'" }
+  "entities": {
+    "username": {
+      "trim": [
+        {
+          "position": "afterLast",
+          "words": [
+            "am",
+            "is",
+            "name is"
+          ],
+          "opts": {
+            "caseSensitive": false
+          }
+        }
       ]
-    },
+    }
+  },
+  "data": [
     {
       "intent": "agent.acquaintance",
       "utterances": [
@@ -686,9 +691,15 @@ export default async function handler(req, res) {
         "howdy"
       ],
       "answers": [
-        "Hey there!",
-        "Greetings!"
-      ]
+        "Hey there {{username}}! Nice to meet you!",
+        "Greetings {{username}}! Nice to meet you!"
+      ],
+      "slotFilling": {
+        "username": {
+          "mandatory": true,
+          "question": "I don't think we've met! What is your name?"
+        }
+      }
     },
     {
       "intent": "greetings.howareyou",

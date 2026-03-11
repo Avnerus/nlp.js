@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   }
   
   try {
-    const { professorId, message, locale = 'en' } = req.body;
+    const { professorId, message, context, locale = 'en' } = req.body;
     
     if (!professorId || !message) {
       return res.status(400).json({ error: 'professorId and message are required' });
@@ -34,23 +34,11 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Professor not found' });
     }
     
-    // Load corpus from Blob
-    const corpusBlob = await fetch(professor.corpus);
-    let corpus = null;
-    if (corpusBlob && corpusBlob.text) {
-      corpus = JSON.parse(await corpusBlob.text());
-    }
-    
-    if (!corpus) {
-      return res.status(404).json({ error: 'Corpus not found' });
-    }
-    
     // Load NLP
-    const nlp = await createNlp(corpus, locale);
+    const nlp = await createNlp(professor.corpus, locale);
+    const response = await nlp.process(locale, message, context);
     
-    const response = await nlp.process(locale, message);
-    
-    res.status(200).json(response);
+    res.status(200).json({answer: response.answer, context});
   } catch (err) {
     console.error('Error processing chat:', err);
     res.status(500).json({ error: 'Failed to process chat message' });

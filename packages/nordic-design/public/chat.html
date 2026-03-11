@@ -123,6 +123,7 @@
     <script>
       const urlParams = new URLSearchParams(window.location.search);
       const professorId = urlParams.get('id') || window.location.pathname.split('/').pop();
+      let context = {};
       
       async function loadProfessor() {
         try {
@@ -141,7 +142,7 @@
         }
       }
       
-      async function sendMessage() {
+      function onChatMessage() {
         const input = document.getElementById('messageInput');
         const message = input.value.trim();
         
@@ -150,20 +151,26 @@
         addMessage(message, 'user');
         input.value = '';
         input.disabled = true;
+
+        sendMessage(message);
+      }
+
+      async function sendMessage(message) {
+        
+        const input = document.getElementById('messageInput');
         
         try {
           const response = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ professorId, message })
+            body: JSON.stringify({ professorId, message, context })
           });
           
           const data = await response.json();
           
           if (response.ok && data) {
-            const botMessage = data.response || data;
-            console.log(botMessage);
-            addMessage(botMessage.answer, 'bot');
+            context = data.context;
+            addMessage(data.answer, 'bot');
           } else {
             addMessage('Sorry, I encountered an error processing your message.', 'bot');
           }
@@ -193,14 +200,17 @@
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
       }
       
-      document.getElementById('sendButton').addEventListener('click', sendMessage);
+      document.getElementById('sendButton').addEventListener('click', onChatMessage);
       
       document.getElementById('chatForm').addEventListener('submit', (e) => {
         e.preventDefault();
-        sendMessage();
+        onChatMessage();
       });
       
-      loadProfessor();
+      (async () => {
+        await loadProfessor();
+        sendMessage('Hi');
+      })();
       
       // Handle keyboard resize on mobile
       function adjustForKeyboard() {
