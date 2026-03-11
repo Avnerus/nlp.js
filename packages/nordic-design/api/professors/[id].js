@@ -37,10 +37,14 @@ export default async function handler(req, res) {
         corpus = JSON.parse(await corpusBlob.text());
       }
       
-      return res.status(200).json({
+      res.status(200).json({
         ...professor,
         corpus
       });
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      return;
     }
     
     if (req.method === 'PUT') {
@@ -53,10 +57,17 @@ export default async function handler(req, res) {
         addRandomSuffix: false
       });
       
-      return res.status(200).json(professor);
+      res.status(200).json(professor);
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      return;
     }
   } catch (err) {
     console.error('Error handling professor:', err);
     res.status(500).json({ error: 'Failed to process professor' });
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
   }
 }

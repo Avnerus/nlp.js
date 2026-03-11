@@ -72,9 +72,15 @@ async function listProfessors(req, res) {
     }
     
     res.status(200).json(professors);
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
   } catch (err) {
     console.error('Error fetching professors:', err);
     res.status(500).json({ error: 'Failed to fetch professors' });
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
   }
 }
 
