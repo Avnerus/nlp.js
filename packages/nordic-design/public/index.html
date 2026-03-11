@@ -336,8 +336,11 @@
           });
           
           if (response.ok) {
+            // Immediately remove from UI without full reload
+            removeProfessorFromUI(id);
+            
+            // Show success message
             alert('Professor deleted successfully!');
-            loadProfessors();
           } else {
             const err = await response.json();
             alert(`Error: ${err.error}`);
@@ -347,6 +350,37 @@
           alert('Failed to delete professor');
         }
       };
+      
+      // Remove professor card from UI immediately
+      function removeProfessorFromUI(id) {
+        const container = document.getElementById('professorsGrid');
+        const professorCards = container.querySelectorAll('.nordic-card.overflow-hidden');
+        
+        professorCards.forEach(card => {
+          // Find the delete button inside the card to check if it matches
+          const deleteBtn = card.querySelector('.delete-btn');
+          if (deleteBtn) {
+            // Extract the id from the onclick handler
+            const onclick = deleteBtn.getAttribute('onclick');
+            if (onclick && onclick.includes(id)) {
+              card.remove();
+            }
+          }
+        });
+        
+        // If no cards left, show empty state
+        if (container.querySelectorAll('.nordic-card.overflow-hidden').length === 0) {
+          container.innerHTML = `
+            <div class="col-span-full text-center py-16">
+              <div class="w-24 h-24 bg-gray-100 rounded-full mx-auto mb-6 flex items-center justify-center">
+                <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+              </div>
+              <p class="text-gray-500 text-lg">No professors yet. Create one above!</p>
+            </div>`;
+        }
+      }
     </script>
   </body>
 </html>
