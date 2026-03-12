@@ -99,7 +99,7 @@ async function createProfessor(req, res) {
       imageUrl = url;
     }
     
-    const template = await (await fetch('https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/corpus-en.json', {
+    const template = await (await fetch('https://ndxbhqxzhbvdiq8b.public.blob.vercel-storage.com/corpus-en.json', {
       cache: 'no-store'
     })).text();
     const newId = `prof_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
