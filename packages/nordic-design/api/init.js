@@ -5,13 +5,14 @@ const sql = neon(process.env.DATABASE_URL);
 
 export default async function handler(req, res) {
     // Connect to the Neon database and create table if not exists
+    await sql.query('DROP TABLE IF EXISTS "professors"');
     await sql.query(`
-      CREATE TABLE IF NOT EXISTS "professors" (
-        "id" VARCHAR(255) PRIMARY KEY,
+      CREATE TABLE "professors" (
+        "id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "professors_id_seq"),
         "name" text NOT NULL,
         "field" text,
         "image" text,
-        "corpus" jsonb,
+        "corpus" text,
         "created_at" timestamp
       );
    `);

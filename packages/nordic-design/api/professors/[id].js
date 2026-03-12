@@ -14,7 +14,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Professor ID required' });
     }
     
-    const professor = await sql`SELECT * FROM professors WHERE id = ${professorId}`;
+    const professor = await sql`SELECT * FROM professors WHERE id = ${Number(professorId)}`;
     if (professor.length === 0) {
       return res.status(404).json({ error: 'Professor not found' });
     }
@@ -27,7 +27,7 @@ export default async function handler(req, res) {
         name: professorData.name,
         field: professorData.field,
         image: professorData.image,
-        corpus: professorData.corpus,
+        corpus: JSON.parse(professorData.corpus),
         createdAt: professorData.created_at
       });
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -43,7 +43,7 @@ export default async function handler(req, res) {
       await sql`
         UPDATE professors 
         SET corpus = ${JSON.stringify(corpus)} 
-        WHERE id = ${professorId}
+        WHERE id = ${Number(professorId)}
       `;
       
       res.status(200).json({

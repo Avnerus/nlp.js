@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     }
     
     // Read professor from database
-    const professor = await sql`SELECT * FROM professors WHERE id = ${professorId}`;
+    const professor = await sql`SELECT * FROM professors WHERE id = ${Number(professorId)}`;
     if (professor.length === 0) {
       return res.status(404).json({ error: 'Professor not found' });
     }
