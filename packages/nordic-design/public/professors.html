@@ -395,24 +395,9 @@
           });
           
           // Set YAML editor with knowledge (YAML format)
-          if (data.knowledge && data.knowledge.trim()) {
-            window.yamlView.dispatch({
-              changes: { from: 0, to: window.yamlView.state.doc.length, insert: data.knowledge }
-            });
-           } else {
-            // Default knowledge template (YAML format - array of intents)
-            const defaultKnowledge = `- intent: greetings.hello
-  utterances:
-    - hi
-    - hello
-  answers:
-    - Hey there!
-    - Hi there!
-`;
-            window.yamlView.dispatch({
-              changes: { from: 0, to: window.yamlView.state.doc.length, insert: defaultKnowledge }
-            });
-          }
+          window.yamlView.dispatch({
+            changes: { from: 0, to: window.yamlView.state.doc.length, insert: data.knowledge }
+          });
           
           // Store entities for later use
           window.currentEntities = data.entities || {};
@@ -527,8 +512,6 @@
           saveBtnText.textContent = 'Save Corpus';
         }
       });
-      
-      loadProfessor();
     </script>
 
     <script type="module">
@@ -604,6 +587,7 @@
         ],
         parent: document.getElementById("yaml-editor-container")
       });
+      loadProfessor();
     </script>
   </body>
 </html>
