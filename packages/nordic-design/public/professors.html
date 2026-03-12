@@ -8,6 +8,22 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script type="importmap">
+      {
+        "imports": {
+          "@codemirror/state": "https://esm.sh/@codemirror/state",
+          "@codemirror/view": "https://esm.sh/@codemirror/view",
+          "@codemirror/language": "https://esm.sh/@codemirror/language",
+          "@codemirror/commands": "https://esm.sh/@codemirror/commands",
+          "@codemirror/autocomplete": "https://esm.sh/@codemirror/autocomplete",
+          "@codemirror/lang-yaml": "https://esm.sh/@codemirror/lang-yaml",
+          "@codemirror/theme-one-dark": "https://esm.sh/@codemirror/theme-one-dark",
+          "codemirror": "https://esm.sh/codemirror",
+          "prettier": "https://esm.sh/prettier@3.2.5/standalone",
+          "prettier-yaml": "https://esm.sh/prettier@3.2.5/parser-yaml"
+        }
+      }
+    </script>
     <style>
       body { 
         font-family: 'Inter', sans-serif;
@@ -334,6 +350,7 @@
         </div>
         
         <div class="relative">
+          <div id="yaml-editor-container"></div>
           <textarea id="corpusEditor" class="nordic-input w-full h-[600px] px-6 py-4 font-mono text-sm rounded-xl transition resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder='{"data": []}'></textarea>
         </div>
         
@@ -405,10 +422,12 @@
         try {
           const corpus = JSON.parse(corpusText);
           
+          const knowledge = window.yamlView.state.doc.toString());
+          
           const response = await fetch(`/api/professors/${professorId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ corpus })
+            body: JSON.stringify({ knowledge, corpus })
           });
           
           if (response.ok) {
@@ -427,6 +446,83 @@
       });
       
       loadProfessor();
+    </script>
+
+    <script type="module">
+      import { EditorView, basicSetup } from "codemirror";
+      import { yaml } from "@codemirror/lang-yaml";
+      import { oneDark } from "@codemirror/theme-one-dark";
+      import { autocompletion } from "@codemirror/autocomplete";
+      import prettier from "prettier";
+      import yamlParser from "prettier-yaml";
+      import { keymap } from "@codemirror/view";
+      import { insertNewlineAndIndent } from "@codemirror/commands";
+      import { Prec } from "@codemirror/state"; // <--- Add this for priority
+      import { indentUnit } from "@codemirror/language";
+
+      const smartYamlEnter = ({ state, dispatch }) => {
+        // 1. Get the current line
+        const line = state.doc.lineAt(state.selection.main.head);
+        const lineText = line.text.trimStart();
+
+        // 2. Check if the line starts with a YAML list dash
+        if (lineText.startsWith("- ") || lineText.includes("answers:") || lineText.includes("utterances:")) {
+          let extraIndent = "";
+          let extraDash = "";
+          if (line.text.trim().endsWith(':')) {
+            extraIndent = "  ";
+            extraDash = "- ";
+          } else if (lineText.includes("intent")) {
+            extraIndent = "  ";
+          } else {
+            extraDash = "- ";
+          }
+          const indent = line.text.match(/^\s*/)[0];
+          
+          // Insert a newline + same indentation + the dash
+          dispatch(state.update({
+            changes: { from: state.selection.main.head, insert: "\n" + indent + extraIndent + extraDash },
+            selection: { anchor: state.selection.main.head + indent.length + extraIndent.length + extraDash.length + 1 },
+            userEvent: "input"
+          }));
+          return true; // "I handled this keypress"
+        }
+
+        return false; // "Let the default Enter handler deal with this"
+    };
+
+      // 1. Define Autocomplete Keywords for your students
+      const nlpCompletions = [
+        { label: "intent", type: "keyword", detail: "A name of the user's intention" },
+        { label: "utterances", type: "keyword", detail: "What the user might say" },
+        { label: "answers", type: "keyword", detail: "Possible responses" },
+        { label: "slotFilling", type: "keyword", detail: "Required data before answering" }
+      ];
+
+      function myCompletions(context) {
+        let word = context.matchBefore(/\w*/);
+        if (word.from == word.to && !context.explicit) return null;
+        return {
+          from: word.from,
+          options: nlpCompletions,
+          validFor: /^\w*$/
+        };
+      }
+
+      // 2. Initialize the Editor
+      window.yamlView = new EditorView({
+        doc: "name: MyBot\nlocale: en-US\ndata:\n  - intent: greet\n    utterances:\n      - hello\n    answers:\n      - Hi!",
+        extensions: [
+          Prec.highest(keymap.of([
+          { key: "Enter", run: smartYamlEnter }
+          ])),
+          basicSetup,
+          yaml(),
+          indentUnit.of("  "), 
+          autocompletion({ override: [myCompletions] })
+        ],
+        parent: document.getElementById("yaml-editor-container")
+      });
     </script>
   </body>
 </html>
