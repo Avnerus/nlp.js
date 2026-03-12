@@ -20,6 +20,7 @@ export async function createNlp(corpus, locale = 'en') {
   const dock = await dockStart(SETTINGS);
   const nlp = dock.get('nlp');
   await nlp.addCorpus(corpus);
+  nlp.forceNER = true;
   await nlp.train();
   return nlp;
 }
