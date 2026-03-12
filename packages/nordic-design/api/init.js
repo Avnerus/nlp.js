@@ -1,20 +1,22 @@
 import { put } from '@vercel/blob';
 import { neon } from '@neondatabase/serverless';
 
+const sql = neon(process.env.DATABASE_URL);
+
 export default async function handler(req, res) {
-    // Connect to the Neon database
-    const sql = neon(`${process.env.DATABASE_URL}`);
-    await sql.query('DROP TABLE IF EXISTS "professors"');
+    // Connect to the Neon database and create table if not exists
     await sql.query(`
-      CREATE TABLE "professors" (
-        "id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "professors_id_seq"),
+      CREATE TABLE IF NOT EXISTS "professors" (
+        "id" VARCHAR(255) PRIMARY KEY,
         "name" text NOT NULL,
         "field" text,
         "image" text,
-        "corpus" text,
+        "corpus" jsonb,
         "created_at" timestamp
       );
    `);
+   
+    // Also create corpus-en.json in blob as the template
     const template = ` 
     {
       "name": "Corpus",
@@ -926,5 +928,9 @@ export default async function handler(req, res) {
       addRandomSuffix: false,  // ← keeps the exact filename
       allowOverwrite: true
     });
-    res.status(200).json(JSON.stringify(blob.url));
+    
+    res.status(200).json({
+      message: 'Database initialized',
+      corpusUrl: blob.url
+    });
 }

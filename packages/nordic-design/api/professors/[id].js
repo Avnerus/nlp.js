@@ -1,4 +1,6 @@
-import { put } from '@vercel/blob';
+import { neon } from '@neondatabase/serverless';
+
+const sql = neon(process.env.DATABASE_URL);
 
 export default async function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'PUT') {
@@ -6,40 +8,27 @@ export default async function handler(req, res) {
   }
   
   try {
-    // Read professors from Vercel Blob
-    const professorsBlob = await fetch("https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/professors.json", {
-      cache: 'no-store'
-    });
-    let professors = [];
-    if (professorsBlob && professorsBlob.text) {
-      professors = JSON.parse(await professorsBlob.text());
-    }
-    
-    // Find professor by ID
+    // Read professor from database
     const professorId = req.query.id || req.query.id;
     if (!professorId) {
       return res.status(400).json({ error: 'Professor ID required' });
     }
     
-    const professor = professors.find(p => p.id === professorId);
-    if (!professor) {
+    const professor = await sql`SELECT * FROM professors WHERE id = ${professorId}`;
+    if (professor.length === 0) {
       return res.status(404).json({ error: 'Professor not found' });
     }
     
-    console.log(professor);
+    const professorData = professor[0];
+    
     if (req.method === 'GET') {
-      // Load corpus from Vercel Blob
-      const corpusBlob = await fetch(professor.corpus, {
-        cache: 'no-store'
-      });
-      let corpus = null;
-      if (corpusBlob && corpusBlob.text) {
-        corpus = JSON.parse(await corpusBlob.text());
-      }
-      
       res.status(200).json({
-        ...professor,
-        corpus
+        id: professorData.id,
+        name: professorData.name,
+        field: professorData.field,
+        image: professorData.image,
+        corpus: professorData.corpus,
+        createdAt: professorData.created_at
       });
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
       res.setHeader('Pragma', 'no-cache');
@@ -49,15 +38,22 @@ export default async function handler(req, res) {
     
     if (req.method === 'PUT') {
       const { corpus } = req.body;
-      // Save corpus to Vercel Blob
-      await put(`corpora/${professorId}.json`, JSON.stringify(corpus, null, 2), { 
-        access: 'public',
-        cacheControlMaxAge: 0,
-        cacheTtl: 0,
-        addRandomSuffix: false
-      });
       
-      res.status(200).json(professor);
+      // Update corpus in database
+      await sql`
+        UPDATE professors 
+        SET corpus = ${JSON.stringify(corpus)} 
+        WHERE id = ${professorId}
+      `;
+      
+      res.status(200).json({
+        id: professorData.id,
+        name: professorData.name,
+        field: professorData.field,
+        image: professorData.image,
+        corpus: corpus,
+        createdAt: professorData.created_at
+      });
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');

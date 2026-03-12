@@ -1,4 +1,7 @@
+import { neon } from '@neondatabase/serverless';
 import { createNlp } from '../src/nlp-engine.js';
+
+const sql = neon(process.env.DATABASE_URL);
 
 export default async function handler(req, res) {
   // Enable CORS
@@ -21,21 +24,16 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'professorId and message are required' });
     }
     
-    // Read professors list
-    const professorsBlob = await fetch('https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/professors.json');
-    let professors = [];
-    if (professorsBlob && professorsBlob.text) {
-      professors = JSON.parse(await professorsBlob.text());
-    }
-    
-    // Find professor
-    const professor = professors.find(p => p.id === professorId);
-    if (!professor) {
+    // Read professor from database
+    const professor = await sql`SELECT * FROM professors WHERE id = ${professorId}`;
+    if (professor.length === 0) {
       return res.status(404).json({ error: 'Professor not found' });
     }
     
-    // Load NLP
-    const nlp = await createNlp(professor.corpus, locale);
+    const professorData = professor[0];
+    
+    // Load NLP with corpus from database
+    const nlp = await createNlp(professorData.corpus, locale);
     const response = await nlp.process(locale, message, context);
     
     res.status(200).json({answer: response.answer, context});
