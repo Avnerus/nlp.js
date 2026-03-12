@@ -33,7 +33,7 @@ export default async function handler(req, res) {
     const professorData = professor[0];
     
     // Load NLP with corpus from database
-    const nlp = await createNlp(professorData.corpus, locale);
+    const nlp = await createNlp(JSON.parse(professorData.corpus), locale);
     const response = await nlp.process(locale, message, context);
     
     res.status(200).json({answer: response.answer, context});

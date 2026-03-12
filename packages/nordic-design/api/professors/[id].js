@@ -3,6 +3,10 @@ import { neon } from '@neondatabase/serverless';
 const sql = neon(process.env.DATABASE_URL);
 
 export default async function handler(req, res) {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
   if (req.method !== 'GET' && req.method !== 'PUT') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -30,9 +34,6 @@ export default async function handler(req, res) {
         corpus: JSON.parse(professorData.corpus),
         createdAt: professorData.created_at
       });
-      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
       return;
     }
     
@@ -54,16 +55,10 @@ export default async function handler(req, res) {
         corpus: corpus,
         createdAt: professorData.created_at
       });
-      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
       return;
     }
   } catch (err) {
     console.error('Error handling professor:', err);
     res.status(500).json({ error: 'Failed to process professor' });
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
   }
 }

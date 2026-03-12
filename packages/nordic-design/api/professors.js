@@ -1,4 +1,4 @@
-import { put } from '@vercel/blob';
+import { put, del } from '@vercel/blob';
 import { neon } from '@neondatabase/serverless';
 import path from 'path';
 import busboy from 'busboy';
@@ -16,7 +16,6 @@ export default async function handler(req, res) {
     return listProfessors(req, res);
   }
   if (req.method === 'POST') {
-    
     req.on('data', (chunk) => {
         // TODO: weird fix to get busboy to start processing
     });
@@ -152,13 +151,7 @@ async function deleteProfessor(req, res) {
     // Delete the professor's image from blob if it's not the default
     if (professorData.image && !professorData.image.includes('default-professor.jpg')) {
       try {
-        // Extract the path from the blob URL
-        const imagePath = professorData.image.replace('https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/', '');
-        await put(imagePath, null, { 
-          access: 'public',
-          cacheControlMaxAge: 0,
-          cacheTtl: 0
-        });
+        await del(professorData.image);
       } catch (err) {
         console.error('Error deleting image:', err);
       }
