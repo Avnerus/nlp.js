@@ -237,6 +237,9 @@
         createBtnLoader.classList.remove('hidden');
         
         const formData = new FormData(e.target);
+        if (formData.get('image').size === 0) {
+          formData.delete('image');
+        }
         
         try {
           const response = await fetch('/api/professors', {

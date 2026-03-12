@@ -57,8 +57,6 @@ async function parseFormData(req) {
     });
 
     bb.on('error', reject);
-
-    req.resume();
     req.pipe(bb);
   });
 }
@@ -84,7 +82,7 @@ async function createProfessor(req, res) {
     const name = fields.name || '';
     const field = fields.field || '';
     
-    let imageUrl = 'https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/images/professors/default-professor.jpg';
+    let imageUrl = 'https://ndxbhqxzhbvdiq8b.public.blob.vercel-storage.com/images/default.jpg';
     if (imageFile) {
       const { url } = await put(`images/professors/${imageFile.name}`, imageFile.buffer, { 
         access: 'public',
