@@ -162,7 +162,45 @@
           <div class="space-y-4 text-sm">
             <div class="guide-section">
               <h3>What is a Corpus?</h3>
-              <p>A corpus is a JSON file that defines what your chatbot knows. It contains <strong>intents</strong> - groups of phrases (utterances) that trigger specific responses (answers).</p>
+              <p>A corpus is a JSON file that defines what your chatbot knows. It contains:</p>
+              <ul class="list-disc list-inside space-y-1 ml-4 text-gray-700">
+                <li><code>name</code> - The corpus name</li>
+                <li><code>locale</code> - Language locale (e.g., "en-US")</li>
+                <li><code>entities</code> - Named entities that can be extracted from user input</li>
+                <li><code>data</code> - Array of intents</li>
+              </ul>
+            </div>
+            
+            <div class="guide-section">
+              <h3>Entities</h3>
+              <p><strong>Entities</strong> are named patterns that extract specific information from user utterances. For example, you can extract a username, date, or any custom pattern.</p>
+              <p>An entity has:</p>
+              <ul class="list-disc list-inside space-y-1 ml-4 text-gray-700">
+                <li><code>trim</code> - Rules to extract the value from the utterance</li>
+                <li><code>options</code> - Predefined valid options for this entity</li>
+              </ul>
+              <p>In the template corpus, the <code>username</code> entity is defined to extract the user's name from phrases like "I'm Avner" or "My name is Avner".</p>
+            </div>
+            
+            <div class="guide-section">
+              <h3>Slot Filling</h3>
+              <p><strong>Slot filling</strong> allows you to ask follow-up questions when required entities aren't provided. This is defined in the intent's <code>slotFilling</code> field.</p>
+              <p>When the user triggers an intent but doesn't provide the required entity, the chatbot will ask the question defined in slotFilling before proceeding.</p>
+              <p><strong>Example:</strong> The <code>greetings.hello</code intent uses slot filling to ask for the username if not provided:</p>
+              <div class="bg-white p-4 rounded-lg mt-3 font-mono text-xs overflow-x-auto">
+                <pre><code>{
+  "intent": "greetings.hello",
+  "utterances": ["hello", "hi", "howdy"],
+  "answers": ["Hey {{ username }}! Nice to meet you."],
+  "slotFilling": {
+    "username": {
+      "mandatory": true,
+      "question": "I don't think we've met! What is your name?"
+    }
+  }
+}</code></pre>
+              </div>
+              <p>The <code>{{ username }}</code> will be replaced with the extracted entity value from the slot filling process.</p>
             </div>
             
             <div class="guide-section">
@@ -196,70 +234,49 @@
             
             <div class="guide-section">
               <h3>Conditional Answers</h3>
-              <p>Use the <code>opts</code> field for conditional responses based on context:</p>
+              <p>Use the <code>opts</code> field for conditional responses based on entity values or context:</p>
+              <p><strong>Example:</strong> The <code>user.likeagent</code> intent gives different responses based on whether the user is "avner" (the creator):</p>
               <div class="bg-white p-4 rounded-lg mt-3 font-mono text-xs overflow-x-auto">
                 <pre><code>{
-  "intent": "agent.whereami",
-  "utterances": ["where am i"],
+  "intent": "user.likeagent",
+  "utterances": ["I like you", "I really like you"],
   "answers": [
-    { "answer": "You're on mobile", "opts": "channel==='telegram'" },
-    { "answer": "You're on desktop", "opts": "channel==='web'" }
-  ]
-}</code></pre>
-              </div>
-            </div>
-            
-            <div class="guide-section">
-              <h3>Template Variables</h3>
-              <p>Use <code>{{ variable }}</code> to insert dynamic values:</p>
-              <div class="bg-white p-4 rounded-lg mt-3 font-mono text-xs overflow-x-auto">
-                <pre><code>{
-  "intent": "agent.whereami",
-  "utterances": ["where am i"],
-  "answers": ["You're talking from {{ channel }}"]
-}</code></pre>
-              </div>
-            </div>
-            
-            <div class="guide-section">
-              <h3>Common Intents to Include</h3>
-              <p>Start with these fundamental intents:</p>
-              <div class="bg-white p-4 rounded-lg mt-3 space-y-2 font-mono text-xs overflow-x-auto">
-                <pre><code>// Agent identity
-- agent.acquaintance: "who are you", "what are you"
-- agent.age: "how old", "your age"
-- agent.whereami: "where am i", "where are we"
-
-// Greetings
-- greetings.hello: "hello", "hi", "hey"
-- greetings.bye: "goodbye", "bye", "see you"
-
-// Help/Support
-- help: "help", "what can you do", "how do I"
-
-// Small talk
-- yes: "yes", "yeah", "yep"
-- no: "no", "nope", "nah"</code></pre>
-              </div>
-            </div>
-            
-            <div class="guide-section">
-              <h3>Full Corpus Structure</h3>
-              <p>Your corpus must be wrapped in an object with <code>name</code>, <code>locale</code>, and <code>data</code> fields:</p>
-              <div class="bg-white p-4 rounded-lg mt-3 font-mono text-xs overflow-x-auto">
-                <pre><code>{
-  "name": "Corpus",
-  "locale": "en-US",
-  "data": [
     {
-      "intent": "intent.name",
-      "utterances": ["phrase 1", "phrase 2"],
-      "answers": ["response 1", "response 2"]
+      "answer": "Of course, because you created me.",
+      "opts": "entities.username.option === 'avner'"
+    },
+    {
+      "answer": "Likewise!",
+      "opts": "entities.username.option !== 'avner'"
     }
   ]
 }</code></pre>
               </div>
+              <p>The <code>opts</code> expression is evaluated at runtime - if true, that answer is used.</p>
             </div>
+            
+            <div class="guide-section">
+              <h3>Template Variables</h3>
+              <p>Use <code>{{ variable }}</code> to insert dynamic values like slot-filled entities:</p>
+              <p><strong>Example:</strong> The <code>greetings.hello</code> intent uses <code>{{ username }}</code> to greet by name:</p>
+              <div class="bg-white p-4 rounded-lg mt-3 font-mono text-xs overflow-x-auto">
+                <pre><code>{
+  "intent": "greetings.hello",
+  "utterances": ["hello", "hi", "howdy"],
+  "answers": [
+    "{{ username === 'Avner' ? 'My creator! (along with fattybear). Honored to meet you.' : 'Greetings ' + username + '! Nice to meet you!' }}"
+  ],
+  "slotFilling": {
+    "username": {
+      "mandatory": true,
+      "question": "I don't think we've met! What is your name?"
+    }
+  }
+}</code></pre>
+              </div>
+              <p>You can also use JavaScript expressions in the template variables for conditional logic.</p>
+            </div>
+            
           </div>
         </div>
         
