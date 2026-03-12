@@ -44,6 +44,13 @@
       .nordic-btn {
         display: inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold transition shadow-md hover:shadow-lg;
       }
+      .nordic-btn-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+      }
+      .nordic-btn-primary:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      }
       .guide-link {
         color: #2563eb;
         text-decoration: none;
@@ -77,6 +84,40 @@
         font-size: 0.9em;
         color: #1f2937;
       }
+      /* Collapsible section styles */
+      .collapsible-header {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        padding: 12px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+        transition: background 0.2s;
+      }
+      .collapsible-header:hover {
+        background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+      }
+      .collapsible-header h3 {
+        margin: 0;
+        color: #1e3a8a;
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+      .collapsible-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+      }
+      .collapsible-content.active {
+        max-height: 2000px;
+      }
+      .toggle-icon {
+        transition: transform 0.3s ease-out;
+        margin-left: 8px;
+      }
+      .collapsible-header.active .toggle-icon {
+        transform: rotate(180deg);
+      }
     </style>
   </head>
   <body class="min-h-screen">
@@ -96,11 +137,17 @@
           <p class="text-gray-600 mt-1">Modify the chatbot's personality and knowledge</p>
         </div>
         <div class="flex gap-3">
-          <a href="/chat.html" id="testChatBtn" class="nordic-green nordic-btn text-white">
+          <a href="/chat.html" id="testChatBtn" class="nordic-btn-primary nordic-btn">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
             </svg>
             Test Chatbot
+          </a>
+          <a href="/edit.html?id=" id="editCorpusBtn" class="nordic-btn-primary nordic-btn">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+            Edit Corpus
           </a>
         </div>
       </div>
@@ -172,38 +219,6 @@
             </div>
             
             <div class="guide-section">
-              <h3>Entities</h3>
-              <p><strong>Entities</strong> are named patterns that extract specific information from user utterances. For example, you can extract a username, date, or any custom pattern.</p>
-              <p>An entity has:</p>
-              <ul class="list-disc list-inside space-y-1 ml-4 text-gray-700">
-                <li><code>trim</code> - Rules to extract the value from the utterance</li>
-                <li><code>options</code> - Predefined valid options for this entity</li>
-              </ul>
-              <p>In the template corpus, the <code>username</code> entity is defined to extract the user's name from phrases like "I'm Avner" or "My name is Avner".</p>
-            </div>
-            
-            <div class="guide-section">
-              <h3>Slot Filling</h3>
-              <p><strong>Slot filling</strong> allows you to ask follow-up questions when required entities aren't provided. This is defined in the intent's <code>slotFilling</code> field.</p>
-              <p>When the user triggers an intent but doesn't provide the required entity, the chatbot will ask the question defined in slotFilling before proceeding.</p>
-              <p><strong>Example:</strong> The <code>greetings.hello</code intent uses slot filling to ask for the username if not provided:</p>
-              <div class="bg-white p-4 rounded-lg mt-3 font-mono text-xs overflow-x-auto">
-                <pre><code>{
-  "intent": "greetings.hello",
-  "utterances": ["hello", "hi", "howdy"],
-  "answers": ["Hey {{ username }}! Nice to meet you."],
-  "slotFilling": {
-    "username": {
-      "mandatory": true,
-      "question": "I don't think we've met! What is your name?"
-    }
-  }
-}</code></pre>
-              </div>
-              <p>The <code>{{ username }}</code> will be replaced with the extracted entity value from the slot filling process.</p>
-            </div>
-            
-            <div class="guide-section">
               <h3>Basic Structure</h3>
               <p>Each intent has three parts:</p>
               <ul class="list-disc list-inside space-y-1 ml-4 text-gray-700">
@@ -232,12 +247,54 @@
               </div>
             </div>
             
+            <!-- Advanced Usage Section (Collapsible) -->
             <div class="guide-section">
-              <h3>Conditional Answers</h3>
-              <p>Use the <code>opts</code> field for conditional responses based on entity values or context:</p>
-              <p><strong>Example:</strong> The <code>user.likeagent</code> intent gives different responses based on whether the user is "avner" (the creator):</p>
-              <div class="bg-white p-4 rounded-lg mt-3 font-mono text-xs overflow-x-auto">
-                <pre><code>{
+              <div class="collapsible-header" id="advancedToggle">
+                <h3>Advanced Usage</h3>
+                <svg class="w-5 h-5 text-gray-500 toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+              <div class="collapsible-content" id="advancedContent">
+                <div class="space-y-4 mt-4 pt-4 border-t border-blue-200">
+                  <div class="guide-section">
+                    <h3>Entities</h3>
+                    <p><strong>Entities</strong> are named patterns that extract specific information from user utterances. For example, you can extract a username, date, or any custom pattern.</p>
+                    <p>An entity has:</p>
+                    <ul class="list-disc list-inside space-y-1 ml-4 text-gray-700">
+                      <li><code>trim</code> - Rules to extract the value from the utterance</li>
+                      <li><code>options</code> - Predefined valid options for this entity</li>
+                    </ul>
+                    <p>In the template corpus, the <code>username</code> entity is defined to extract the user's name from phrases like "I'm Avner" or "My name is Avner".</p>
+                  </div>
+                  
+                  <div class="guide-section">
+                    <h3>Slot Filling</h3>
+                    <p><strong>Slot filling</strong> allows you to ask follow-up questions when required entities aren't provided. This is defined in the intent's <code>slotFilling</code> field.</p>
+                    <p>When the user triggers an intent but doesn't provide the required entity, the chatbot will ask the question defined in slotFilling before proceeding.</p>
+                    <p><strong>Example:</strong> The <code>greetings.hello</code> intent uses slot filling to ask for the username if not provided:</p>
+                    <div class="bg-white p-4 rounded-lg mt-3 font-mono text-xs overflow-x-auto">
+                      <pre><code>{
+  "intent": "greetings.hello",
+  "utterances": ["hello", "hi", "howdy"],
+  "answers": ["Hey {{ username }}! Nice to meet you."],
+  "slotFilling": {
+    "username": {
+      "mandatory": true,
+      "question": "I don't think we've met! What is your name?"
+    }
+  }
+}</code></pre>
+                    </div>
+                    <p>The <code>{{ username }}</code> will be replaced with the extracted entity value from the slot filling process.</p>
+                  </div>
+                  
+                  <div class="guide-section">
+                    <h3>Conditional Answers</h3>
+                    <p>Use the <code>opts</code> field for conditional responses based on entity values or context:</p>
+                    <p><strong>Example:</strong> The <code>user.likeagent</code> intent gives different responses based on whether the user is "avner" (the creator):</p>
+                    <div class="bg-white p-4 rounded-lg mt-3 font-mono text-xs overflow-x-auto">
+                      <pre><code>{
   "intent": "user.likeagent",
   "utterances": ["I like you", "I really like you"],
   "answers": [
@@ -251,16 +308,16 @@
     }
   ]
 }</code></pre>
-              </div>
-              <p>The <code>opts</code> expression is evaluated at runtime - if true, that answer is used.</p>
-            </div>
-            
-            <div class="guide-section">
-              <h3>Template Variables</h3>
-              <p>Use <code>{{ variable }}</code> to insert dynamic values like slot-filled entities:</p>
-              <p><strong>Example:</strong> The <code>greetings.hello</code> intent uses <code>{{ username }}</code> to greet by name:</p>
-              <div class="bg-white p-4 rounded-lg mt-3 font-mono text-xs overflow-x-auto">
-                <pre><code>{
+                    </div>
+                    <p>The <code>opts</code> expression is evaluated at runtime - if true, that answer is used.</p>
+                  </div>
+                  
+                  <div class="guide-section">
+                    <h3>Template Variables</h3>
+                    <p>Use <code>{{ variable }}</code> to insert dynamic values like slot-filled entities:</p>
+                    <p><strong>Example:</strong> The <code>greetings.hello</code> intent uses <code>{{ username }}</code> to greet by name:</p>
+                    <div class="bg-white p-4 rounded-lg mt-3 font-mono text-xs overflow-x-auto">
+                      <pre><code>{
   "intent": "greetings.hello",
   "utterances": ["hello", "hi", "howdy"],
   "answers": [
@@ -273,10 +330,12 @@
     }
   }
 }</code></pre>
+                    </div>
+                    <p>You can also use JavaScript expressions in the template variables for conditional logic.</p>
+                  </div>
+                </div>
               </div>
-              <p>You can also use JavaScript expressions in the template variables for conditional logic.</p>
             </div>
-            
           </div>
         </div>
         
@@ -284,12 +343,12 @@
           <textarea id="corpusEditor" class="nordic-input w-full h-[600px] px-6 py-4 font-mono text-sm rounded-xl transition resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder='{"data": []}'></textarea>
         </div>
         
-        <div class="mt-8 flex justify-end">
-          <button type="submit" class="nordic-green nordic-btn text-white" id="saveCorpusBtn">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+        <div class="mt-8 flex justify-end gap-3">
+          <button type="button" class="nordic-green nordic-btn nordic-btn-primary text-white" id="saveCorpusBtn">
+            <svg class="w-5 h-5 mr-2 animate-spin" id="saveSpinner" style="display: none;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
             </svg>
-            Save Corpus
+            <span id="saveBtnText">Save Corpus</span>
           </button>
         </div>
       </div>
@@ -298,6 +357,14 @@
     <script>
       const urlParams = new URLSearchParams(window.location.search);
       const professorId = urlParams.get('id') || window.location.pathname.split('/').pop();
+      
+      // Toggle advanced section
+      document.getElementById('advancedToggle').addEventListener('click', function() {
+        const content = document.getElementById('advancedContent');
+        const header = document.getElementById('advancedToggle');
+        content.classList.toggle('active');
+        header.classList.toggle('active');
+      });
       
       async function loadProfessor() {
         try {
@@ -322,6 +389,7 @@
           }
           
           document.getElementById('testChatBtn').href = `/chat.html?id=${professorId}`;
+          document.getElementById('editCorpusBtn').href = `/edit.html?id=${professorId}`;
         } catch (err) {
           console.error('Failed to load professor:', err);
           alert('Failed to load professor data');
@@ -330,6 +398,14 @@
       
       document.getElementById('saveCorpusBtn').addEventListener('click', async (e) => {
         e.preventDefault();
+        
+        const saveBtn = document.getElementById('saveCorpusBtn');
+        const saveSpinner = document.getElementById('saveSpinner');
+        const saveBtnText = document.getElementById('saveBtnText');
+        
+        saveBtn.disabled = true;
+        saveSpinner.style.display = 'block';
+        saveBtnText.textContent = 'Saving...';
         
         const corpusText = document.getElementById('corpusEditor').value;
         
@@ -343,13 +419,17 @@
           });
           
           if (response.ok) {
-            alert('Corpus saved successfully!');
+            window.location.href = `/chat.html?id=${professorId}`;
           } else {
             const err = await response.json();
             alert(`Error: ${err.error}`);
           }
         } catch (err) {
           alert('Invalid JSON in corpus editor');
+        } finally {
+          saveBtn.disabled = false;
+          saveSpinner.style.display = 'none';
+          saveBtnText.textContent = 'Save Corpus';
         }
       });
       
