@@ -347,9 +347,12 @@
           </div>
         </div>
         
+        <p class="text-gray-600 mb-6 leading-relaxed">
+          Edit the chatbot's knowledge in YAML format below. Each intent defines what the user might say (utterances) and how the chatbot should respond (answers).
+        </p>
+        
         <div class="relative">
-          <div id="yaml-editor-container"></div>
-          <textarea id="corpusEditor" class="nordic-input w-full h-[600px] px-6 py-4 font-mono text-sm rounded-xl transition resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder='{"data": []}'></textarea>
+          <div id="yaml-editor-container" class="w-full h-[600px] rounded-xl overflow-hidden border border-gray-200"></div>
         </div>
         
         <div class="mt-8 flex justify-end gap-3">
@@ -391,11 +394,28 @@
             minute: '2-digit'
           });
           
-          if (data.corpus) {
-            document.getElementById('corpusEditor').value = JSON.stringify(data.corpus, null, 2);
-          } else {
-            document.getElementById('corpusEditor').value = JSON.stringify({ name: "Corpus", locale: "en-US", data: [] }, null, 2);
+          // Set YAML editor with knowledge (YAML format)
+          if (data.knowledge && data.knowledge.trim()) {
+            window.yamlView.dispatch({
+              changes: { from: 0, to: window.yamlView.state.doc.length, insert: data.knowledge }
+            });
+           } else {
+            // Default knowledge template (YAML format - array of intents)
+            const defaultKnowledge = `- intent: greetings.hello
+  utterances:
+    - hi
+    - hello
+  answers:
+    - Hey there!
+    - Hi there!
+`;
+            window.yamlView.dispatch({
+              changes: { from: 0, to: window.yamlView.state.doc.length, insert: defaultKnowledge }
+            });
           }
+          
+          // Store entities for later use
+          window.currentEntities = data.entities || {};
           
           document.getElementById('testChatBtn').href = `/chat.html?id=${professorId}`;
         } catch (err) {
@@ -415,17 +435,82 @@
         saveSpinner.style.display = 'block';
         saveBtnText.textContent = 'Saving...';
         
-        const corpusText = document.getElementById('corpusEditor').value;
+        // Get YAML knowledge
+        const yamlKnowledge = window.yamlView.state.doc.toString();
+        
+        // Convert YAML to JSON using browser-based parsing
+        // For simplicity, we'll send YAML as-is and let the server handle conversion
+        // Or we can use a simple regex-based approach for basic YAML
+        
+        // For now, just send the YAML - the server will parse it
+        let knowledgeJson = { data: [] };
+        if (yamlKnowledge.trim()) {
+          try {
+            // Try to parse YAML-like structure
+            // This is a simplified parser that handles our specific format
+            const intents = [];
+            const lines = yamlKnowledge.split('\n');
+            let currentIntent = null;
+            
+            for (let i = 0; i < lines.length; i++) {
+              const line = lines[i];
+              const trimmed = line.trim();
+              
+              if (trimmed.startsWith('- intent:')) {
+                if (currentIntent) {
+                  intents.push(currentIntent);
+                }
+                currentIntent = {
+                  intent: trimmed.replace('- intent:', '').trim(),
+                  utterances: [],
+                  answers: []
+                };
+              } else if (trimmed.startsWith('- ') && currentIntent) {
+                // Could be utterance or answer
+                const value = trimmed.substring(2);
+                if (i > 0 && lines[i-1].includes('utterances:')) {
+                  currentIntent.utterances.push(value);
+                } else if (i > 0 && lines[i-1].includes('answers:')) {
+                  currentIntent.answers.push(value);
+                }
+              }
+            }
+            if (currentIntent) {
+              intents.push(currentIntent);
+            }
+            
+            knowledgeJson = { data: intents };
+          } catch (err) {
+            console.error('Failed to parse YAML knowledge:', err);
+            knowledgeJson = { data: [] };
+          }
+        }
+        
+        // Merge knowledge data and entities into corpus
+        const corpus = {
+          name: "Corpus",
+          locale: "en-US"
+        };
+        
+        // Add entities if available
+        if (window.currentEntities && Object.keys(window.currentEntities).length > 0) {
+          corpus.entities = window.currentEntities;
+        }
+        
+        // Add knowledge data
+        if (knowledgeJson.data && knowledgeJson.data.length > 0) {
+          corpus.data = knowledgeJson.data;
+        }
         
         try {
-          const corpus = JSON.parse(corpusText);
-          
-          const knowledge = window.yamlView.state.doc.toString());
-          
           const response = await fetch(`/api/professors/${professorId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ knowledge, corpus })
+            body: JSON.stringify({ 
+              knowledge: yamlKnowledge,
+              entities: window.currentEntities || {},
+              corpus: corpus
+            })
           });
           
           if (response.ok) {
@@ -435,7 +520,7 @@
             alert(`Error: ${err.error}`);
           }
         } catch (err) {
-          alert('Invalid JSON in corpus editor');
+          alert('Failed to save: ' + err.message);
         } finally {
           saveBtn.disabled = false;
           saveSpinner.style.display = 'none';
@@ -507,7 +592,7 @@
 
       // 2. Initialize the Editor
       window.yamlView = new EditorView({
-        doc: "name: MyBot\nlocale: en-US\ndata:\n  - intent: greet\n    utterances:\n      - hello\n    answers:\n      - Hi!",
+        doc: "- intent: greetings.hello\n  utterances:\n    - hi\n    - hello\n    - hey\n  answers:\n    - Hello there!\n    - Hi!\n",
         extensions: [
           Prec.highest(keymap.of([
           { key: "Enter", run: smartYamlEnter }

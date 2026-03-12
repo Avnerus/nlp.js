@@ -12,6 +12,8 @@ export default async function handler(req, res) {
         "name" text NOT NULL,
         "field" text,
         "image" text,
+        "knowledge" text,
+        "entities" text,
         "corpus" text,
         "created_at" timestamp
       );

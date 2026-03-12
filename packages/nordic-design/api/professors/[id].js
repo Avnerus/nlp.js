@@ -31,6 +31,8 @@ export default async function handler(req, res) {
         name: professorData.name,
         field: professorData.field,
         image: professorData.image,
+        knowledge: professorData.knowledge || '',
+        entities: professorData.entities ? JSON.parse(professorData.entities) : {},
         corpus: JSON.parse(professorData.corpus),
         createdAt: professorData.created_at
       });
@@ -38,12 +40,78 @@ export default async function handler(req, res) {
     }
     
     if (req.method === 'PUT') {
-      const { corpus } = req.body;
+      const { knowledge, entities, corpus } = req.body;
       
-      // Update corpus in database
+      // Build the corpus from knowledge and entities
+      let corpusObj = {
+        name: "Corpus",
+        locale: "en-US"
+      };
+      
+      // Add entities if provided
+      if (entities && Object.keys(entities).length > 0) {
+        corpusObj.entities = entities;
+      }
+      
+      // Convert YAML knowledge to JSON and add to corpus
+      if (knowledge && knowledge.trim()) {
+        try {
+          // Parse YAML-like format (simplified)
+          const intents = [];
+          const lines = knowledge.split('\n');
+          let currentIntent = null;
+          
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const trimmed = line.trim();
+            
+            if (trimmed.startsWith('- intent:')) {
+              if (currentIntent) {
+                intents.push(currentIntent);
+              }
+              currentIntent = {
+                intent: trimmed.replace('- intent:', '').trim(),
+                utterances: [],
+                answers: []
+              };
+            } else if (trimmed.startsWith('- ') && currentIntent) {
+              const value = trimmed.substring(2);
+              if (i > 0 && lines[i-1].includes('utterances:')) {
+                currentIntent.utterances.push(value);
+              } else if (i > 0 && lines[i-1].includes('answers:')) {
+                currentIntent.answers.push(value);
+              }
+            }
+          }
+          if (currentIntent) {
+            intents.push(currentIntent);
+          }
+          
+          if (intents.length > 0) {
+            corpusObj.data = intents;
+          }
+        } catch (e) {
+          console.error('Failed to parse YAML knowledge:', e);
+          corpusObj.data = [];
+        }
+      } else {
+        // If no knowledge, keep existing data from corpus if available
+        if (corpus && corpus.data) {
+          corpusObj.data = corpus.data;
+        }
+      }
+      
+      // If entities provided separately (not in knowledge), add them
+      if (entities && Object.keys(entities).length > 0 && !corpusObj.entities) {
+        corpusObj.entities = entities;
+      }
+      
+      // Update corpus in database as JSON string
       await sql`
         UPDATE professors 
-        SET corpus = ${JSON.stringify(corpus)} 
+        SET knowledge = ${knowledge || null}, 
+            entities = ${entities ? JSON.stringify(entities) : null},
+            corpus = ${JSON.stringify(corpusObj)} 
         WHERE id = ${Number(professorId)}
       `;
       
@@ -52,7 +120,9 @@ export default async function handler(req, res) {
         name: professorData.name,
         field: professorData.field,
         image: professorData.image,
-        corpus: corpus,
+        knowledge,
+        entities: entities || {},
+        corpus: corpusObj,
         createdAt: professorData.created_at
       });
       return;
