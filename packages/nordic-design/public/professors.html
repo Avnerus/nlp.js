@@ -18,9 +18,7 @@
           "@codemirror/autocomplete": "https://esm.sh/@codemirror/autocomplete",
           "@codemirror/lang-yaml": "https://esm.sh/@codemirror/lang-yaml",
           "@codemirror/theme-one-dark": "https://esm.sh/@codemirror/theme-one-dark",
-          "codemirror": "https://esm.sh/codemirror",
-          "prettier": "https://esm.sh/prettier@3.2.5/standalone",
-          "prettier-yaml": "https://esm.sh/prettier@3.2.5/parser-yaml"
+          "codemirror": "https://esm.sh/codemirror"
         }
       }
     </script>
@@ -453,8 +451,6 @@
       import { yaml } from "@codemirror/lang-yaml";
       import { oneDark } from "@codemirror/theme-one-dark";
       import { autocompletion } from "@codemirror/autocomplete";
-      import prettier from "prettier";
-      import yamlParser from "prettier-yaml";
       import { keymap } from "@codemirror/view";
       import { insertNewlineAndIndent } from "@codemirror/commands";
       import { Prec } from "@codemirror/state"; // <--- Add this for priority
