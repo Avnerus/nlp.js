@@ -157,12 +157,17 @@
         <textarea id="entitiesEditor" class="nordic-input w-full h-[300px] px-6 py-4 font-mono text-sm rounded-xl transition resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder='{"username": {"trim": [{"position": "afterLast", "words": ["is", "name is"], "opts": {"caseSensitive": false}}], "options": {"avner": ["Avner"]}}}'></textarea>
         
         <div class="mt-8 flex justify-end gap-3">
-          <button type="button" class="nordic-btn-green inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold transition shadow-md hover:shadow-lg;
-id="saveCorpusBtn">
+          <button type="button" class="nordic-btn-green inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold transition shadow-md hover:shadow-lg" id="saveCorpusBtn">
             <svg class="w-5 h-5 mr-2 animate-spin" id="saveSpinner" style="display: none;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
             </svg>
-            <span id="saveBtnText">Save Changes</span>
+            <span id="saveBtnText">Save and test</span>
+          </button>
+          <button type="button" class="nordic-btn-green inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold transition shadow-md hover:shadow-lg" id="saveAndTestBtn">
+            <svg class="w-5 h-5 mr-2 animate-spin" id="saveAndTestSpinner" style="display: none;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            <span id="saveAndTestBtnText">Save and test</span>
           </button>
         </div>
       </div>
@@ -285,7 +290,89 @@ id="saveCorpusBtn">
         } finally {
           saveBtn.disabled = false;
           saveSpinner.style.display = 'none';
-          saveBtnText.textContent = 'Save Changes';
+          saveBtnText.textContent = 'Save and test';
+        }
+      });
+
+      document.getElementById('saveAndTestBtn').addEventListener('click', async (e) => {
+        e.preventDefault();
+        
+        const saveBtn = document.getElementById('saveAndTestBtn');
+        const saveSpinner = document.getElementById('saveAndTestSpinner');
+        const saveBtnText = document.getElementById('saveAndTestBtnText');
+        
+        saveBtn.disabled = true;
+        saveSpinner.style.display = 'block';
+        saveBtnText.textContent = 'Saving...';
+        
+        const yamlKnowledge = window.yamlView.state.doc.toString();
+        const entitiesText = document.getElementById('entitiesEditor').value;
+        
+        let entities = {};
+        try {
+          if (entitiesText.trim()) {
+            entities = JSON.parse(entitiesText);
+          }
+        } catch (err) {
+          alert('Invalid JSON in entities editor');
+          saveBtn.disabled = false;
+          saveSpinner.style.display = 'none';
+          saveBtnText.textContent = 'Save and test';
+          return;
+        }
+        
+        // Use js-yaml to parse YAML to JSON
+        let knowledgeJson = { data: [] };
+        try {
+          const yaml = await import('js-yaml');
+          const parsed = yaml.load(yamlKnowledge);
+          if (Array.isArray(parsed)) {
+            knowledgeJson = { data: parsed };
+          } else if (parsed && parsed.intent) {
+            knowledgeJson = { data: [parsed] };
+          }
+        } catch (err) {
+          console.error('Failed to parse YAML knowledge:', err);
+          knowledgeJson = { data: [] };
+        }
+        
+        // Build corpus
+        const corpus = {
+          name: "Corpus",
+          locale: "en-US"
+        };
+        
+        if (Object.keys(entities).length > 0) {
+          corpus.entities = entities;
+        }
+        
+        if (knowledgeJson.data && knowledgeJson.data.length > 0) {
+          corpus.data = knowledgeJson.data;
+        }
+        
+        try {
+          const response = await fetch(`/api/professors/${professorId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              knowledge: yamlKnowledge,
+              entities: entities,
+              corpus: corpus
+            })
+          });
+          
+          if (response.ok) {
+            window.location.href = `/chat.html?id=${professorId}`;
+          } else {
+            const err = await response.json();
+            alert(`Error: ${err.error}`);
+          }
+        } catch (err) {
+          alert('Failed to save: ' + err.message);
+        } finally {
+          saveBtn.disabled = false;
+          saveSpinner.style.display = 'none';
+          saveBtnText.textContent = 'Save and test';
         }
       });
     </script>
