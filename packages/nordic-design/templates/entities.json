@@ -1,0 +1,22 @@
+{
+  "username": {
+    "trim": [
+      {
+        "position": "afterLast",
+        "words": [
+          "am",
+          "is",
+          "name is"
+        ],
+        "opts": {
+          "caseSensitive": false
+        }
+      }
+    ],
+    "options": {
+      "avner": [
+        "Avner"
+      ]
+    }
+  }
+}

@@ -93,49 +93,49 @@ async function createProfessor(req, res) {
       imageUrl = url;
     }
     
-    // Load template corpus from blob
-    const templateResponse = await fetch('https://ndxbhqxzhbvdiq8b.public.blob.vercel-storage.com/corpus-en.json', {
+    // Load knowledge.yaml template from blob
+    const knowledgeResponse = await fetch('https://ndxbhqxzhbvdiq8b.public.blob.vercel-storage.com/knowledge.yaml', {
       cache: 'no-store'
     });
     
-    if (!templateResponse.ok) {
-      throw new Error('Failed to load template corpus');
+    if (!knowledgeResponse.ok) {
+      throw new Error('Failed to load knowledge.yaml template');
     }
     
-    const templateCorpus = await templateResponse.text();
-    let corpusData;
-    try {
-      corpusData = JSON.parse(templateCorpus);
-    } catch (e) {
-      console.error('Failed to parse template corpus:', e);
-      corpusData = { name: "Corpus", locale: "en-US", data: [] };
+    const knowledge = await knowledgeResponse.text();
+    
+    // Load entities.json template from blob
+    const entitiesResponse = await fetch('https://ndxbhqxzhbvdiq8b.public.blob.vercel-storage.com/entities.json', {
+      cache: 'no-store'
+    });
+    
+    if (!entitiesResponse.ok) {
+      throw new Error('Failed to load entities.json template');
     }
     
-    // Extract entities from template
-    const entities = corpusData.entities || {};
+    const entities = await entitiesResponse.json();
     
-    // Convert knowledge (data array) to YAML format
-    const knowledge = convertDataToYaml(corpusData.data || []);
-    
-    // Create the corpus with entities and knowledge
-    const baseCorpus = {
-      name: corpusData.name || "Corpus",
-      locale: corpusData.locale || "en-US"
+    // Build corpus from knowledge and entities
+    const corpus = {
+      name: "Corpus",
+      locale: "en-US"
     };
     
     if (Object.keys(entities).length > 0) {
-      baseCorpus.entities = entities;
+      corpus.entities = entities;
     }
     
-    if (corpusData.data && corpusData.data.length > 0) {
-      baseCorpus.data = corpusData.data;
+    // Parse YAML knowledge to get the data array for corpus
+    const intents = parseYamlToData(knowledge);
+    if (intents.length > 0) {
+      corpus.data = intents;
     }
     
     // Insert professor into database with all fields as text
     const timestamp = new Date();
     const professor = await sql`
       INSERT INTO professors (name, field, image, knowledge, entities, corpus, created_at)
-      VALUES (${name}, ${field}, ${imageUrl}, ${knowledge || ''}, ${JSON.stringify(entities) || null}, ${JSON.stringify(baseCorpus)}, ${timestamp})
+      VALUES (${name}, ${field}, ${imageUrl}, ${knowledge}, ${JSON.stringify(entities)}, ${JSON.stringify(corpus)}, ${timestamp})
       RETURNING id
     `;
     
@@ -146,7 +146,7 @@ async function createProfessor(req, res) {
       image: imageUrl,
       knowledge,
       entities,
-      corpus: baseCorpus,
+      corpus,
       createdAt: timestamp
     };
     
@@ -157,32 +157,57 @@ async function createProfessor(req, res) {
   }
 }
 
-// Convert data array to YAML format for knowledge field
-function convertDataToYaml(data) {
-  if (!data || !Array.isArray(data) || data.length === 0) {
-    return '';
+// Parse YAML knowledge to extract data array for corpus
+function parseYamlToData(yaml) {
+  if (!yaml || !yaml.trim()) {
+    return [];
   }
   
-  return data.map(intent => {
-    let yaml = `- intent: ${intent.intent}\n`;
-    yaml += `  utterances:\n`;
-    if (intent.utterances && intent.utterances.length > 0) {
-      yaml += intent.utterances.map(utt => `    - ${utt}\n`).join('');
-    }
-    yaml += `  answers:\n`;
-    if (intent.answers && intent.answers.length > 0) {
-      yaml += intent.answers.map(ans => {
-        // Handle both string and object answers
-        if (typeof ans === 'string') {
-          return `    - ${ans}\n`;
-        } else if (ans && ans.answer) {
-          return `    - ${ans.answer}\n`;
+  const intents = [];
+  const lines = yaml.split('\n');
+  let currentIntent = null;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    
+    if (trimmed.startsWith('- intent:')) {
+      if (currentIntent) {
+        intents.push(currentIntent);
+      }
+      currentIntent = {
+        intent: trimmed.replace('- intent:', '').trim(),
+        utterances: [],
+        answers: []
+      };
+    } else if (trimmed.startsWith('- ') && currentIntent) {
+      const value = trimmed.substring(2);
+      if (i > 0 && lines[i-1].includes('utterances:')) {
+        currentIntent.utterances.push(value);
+      } else if (i > 0 && lines[i-1].includes('answers:')) {
+        // Handle object answers like "- answer: ... opts: ..."
+        if (value.startsWith('answer:')) {
+          // This is a complex answer with opts
+          currentIntent.answers.push({ answer: value.replace('answer:', '').trim() });
+        } else if (value.startsWith('opts:')) {
+          // Add opts to the last answer
+          if (currentIntent.answers.length > 0 && typeof currentIntent.answers[currentIntent.answers.length - 1] === 'object') {
+            currentIntent.answers[currentIntent.answers.length - 1].opts = value.replace('opts:', '').trim();
+          }
+        } else if (value.startsWith('mandatory:')) {
+          // slotFilling - we'll ignore for now as it's complex
+        } else {
+          currentIntent.answers.push(value);
         }
-        return '';
-      }).join('');
+      }
     }
-    return yaml;
-  }).join('');
+  }
+  
+  if (currentIntent) {
+    intents.push(currentIntent);
+  }
+  
+  return intents;
 }
 
 async function deleteProfessor(req, res) {
