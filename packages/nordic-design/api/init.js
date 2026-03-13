@@ -39,7 +39,6 @@ export default async function handler(req, res) {
     - Alvar Aalto is a Finnish architect and a designer.
     - Alvar Aalto founded the furniture company Artek!
 
-
 # You may copy and edit the text above to create more "intents", "utterances" (=questions) and "answers". Rembmer to name your intents and start each intent with a dash and space!
 
 ##########################################################
