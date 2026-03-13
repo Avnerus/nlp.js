@@ -369,4 +369,31 @@ await sql`DELETE FROM professors WHERE id = ${Number(id)}`;
 
 ---
 
+## Testing
+
+**Run tests for every non-frontend change:**
+
+```bash
+# All tests
+npm test
+
+# API tests (requires running dev server)
+npm run test:api
+
+# NLP engine tests
+npm run test:nlp
+```
+
+**Test files:**
+- `__tests__/api.test.js` — Integration tests for all API endpoints
+- `__tests__/nlp-engine.test.js` — Unit tests for NLP engine
+- `__tests__/nordic-design.test.js` — Basic package test
+
+**Run dev server for API tests:**
+```bash
+npm run dev
+```
+
+---
+
 **Ready for review.** All features implemented and tested.
