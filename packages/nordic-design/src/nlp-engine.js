@@ -10,7 +10,7 @@ export async function createNlp(corpus, locale = 'en') {
   const uniqueName = `${Date.now()}`;
   const SETTINGS = {
     settings: {
-      [uniqueName]: {
+      nlp: {
         corpora: [],
       },
     },
