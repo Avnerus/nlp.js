@@ -10,7 +10,6 @@ export const config = {
   },
 };
 
-const sql = neon(process.env.DATABASE_URL);
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
@@ -71,6 +70,8 @@ async function listProfessors(req, res) {
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
 
+    const sql = neon(process.env.DATABASE_URL);
+
     const professors =
       await sql`SELECT * FROM professors ORDER BY created_at DESC`;
 
@@ -86,6 +87,8 @@ async function createProfessor(req, res) {
     const { fields, imageFile } = await parseFormData(req);
     const name = fields.name || '';
     const field = fields.field || '';
+
+    const sql = neon(process.env.DATABASE_URL);
 
     let imageUrl =
       'https://ndxbhqxzhbvdiq8b.public.blob.vercel-storage.com/images/default.jpg';
@@ -193,6 +196,7 @@ async function deleteProfessor(req, res) {
     if (!id) {
       return res.status(400).json({ error: 'Professor ID is required' });
     }
+    const sql = neon(process.env.DATABASE_URL);
 
     // Find the professor to delete
     const professor = await sql`SELECT * FROM professors WHERE id = ${Number(

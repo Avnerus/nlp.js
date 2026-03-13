@@ -1,7 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 import yaml from 'js-yaml';
 
-const sql = neon(process.env.DATABASE_URL);
 
 export default async function handler(req, res) {
   res.setHeader(
@@ -16,6 +15,7 @@ export default async function handler(req, res) {
   }
 
   try {
+    const sql = neon(process.env.DATABASE_URL);
     // Read professor from database
     const professorId = req.query.id || req.query.id;
     if (!professorId) {
