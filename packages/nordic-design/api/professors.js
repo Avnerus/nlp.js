@@ -207,7 +207,7 @@ async function deleteProfessor(req, res) {
     // Delete the professor's image from blob if it's not the default
     if (
       professorData.image &&
-      !professorData.image.includes('default-professor.jpg')
+      !professorData.image.includes('default.jpg')
     ) {
       try {
         await del(professorData.image);

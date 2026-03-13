@@ -191,7 +191,7 @@ To deploy:
 
 **2. Vercel Blob Image Deletion**
 - Uses `del()` from `@vercel/blob` for cleaner image cleanup
-- Only deletes non-default images (skips `default-professor.jpg`)
+- Only deletes non-default images (skips `default.jpg`)
 
 **3. Integer IDs**
 - All professor IDs are now integers from the database
@@ -356,7 +356,7 @@ await sql`DELETE FROM professors WHERE id = ${Number(id)}`;
 - **Template URLs:**
   - `https://ndxbhqxzhbvdiq8b.public.blob.vercel-storage.com/knowledge.yaml`
   - `https://ndxbhqxzhbvdiq8b.public.blob.vercel-storage.com/entities.json`
-- **Default image URL:** `https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/images/professors/default-professor.jpg`
+- **Default image URL:** `https://ndxbhqxzhbvdiq8b.public.blob.vercel-storage.com/images/default.jpg`
 
 ---
 
