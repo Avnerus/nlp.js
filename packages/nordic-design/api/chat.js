@@ -18,7 +18,7 @@ export default async function handler(req, res) {
 
   try {
 
-    const sql = neon(process.env.DATABASE_URL);
+    const sql = neon(process.env.DATABASE_URL_UNPOOLED);
     const { professorId, message, context, locale = 'en' } = req.body;
 
     if (!professorId || !message) {

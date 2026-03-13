@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const sql = neon(process.env.DATABASE_URL);
+    const sql = neon(process.env.DATABASE_URL_UNPOOLED);
     // Read professor from database
     const professorId = req.query.id || req.query.id;
     if (!professorId) {

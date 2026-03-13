@@ -1,7 +1,7 @@
 import { put } from '@vercel/blob';
 import { neon } from '@neondatabase/serverless';
 
-const sql = neon(process.env.DATABASE_URL);
+const sql = neon(process.env.DATABASE_URL_UNPOOLED);
 
 export default async function handler(req, res) {
   // Connect to the Neon database and create table if not exists

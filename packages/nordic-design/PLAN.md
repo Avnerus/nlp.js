@@ -309,7 +309,7 @@ Uses `@neondatabase/serverless` with template string syntax:
 
 ```javascript
 import { neon } from '@neondatabase/serverless';
-const sql = neon(process.env.DATABASE_URL);
+const sql = neon(process.env.DATABASE_URL_UNPOOLED);
 
 // Example queries:
 const professors = await sql`SELECT * FROM professors ORDER BY created_at DESC`;
