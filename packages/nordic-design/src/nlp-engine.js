@@ -1,13 +1,4 @@
-import { dockStart } from '@nlpjs/basic';
-
-const SETTINGS = {
-  settings: {
-    nlp: {
-      corpora: [],
-    },
-  },
-  use: ['Basic'],
-};
+import { dock } from '@nlpjs/basic';
 
 /**
  * Create an NLP instance from a custom corpus object
@@ -16,8 +7,18 @@ const SETTINGS = {
  * @returns {Promise<object>} NLP manager instance
  */
 export async function createNlp(corpus, locale = 'en') {
-  const dock = await dockStart(SETTINGS);
-  const nlp = dock.get('nlp');
+  const uniqueName = `${Date.now()}`;
+  const SETTINGS = {
+    settings: {
+      [uniqueName]: {
+        corpora: [],
+      },
+    },
+    use: ['Basic'],
+  };
+
+  const container = await dock.createContainer(uniqueName, SETTINGS, false);
+  const nlp = container.get('nlp');
 
   // Only add corpus if it has data to avoid errors
   if (corpus && corpus.data && corpus.data.length > 0) {
