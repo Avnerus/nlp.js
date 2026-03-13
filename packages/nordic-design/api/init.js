@@ -22,22 +22,28 @@ export default async function handler(req, res) {
   // Upload knowledge.yaml template with comments
   const knowledgeTemplate = `# Knowledge YAML Template
 # This file defines the chatbot's knowledge using a simple YAML format.
-# Each intent starts with "- intent:" with a name for the intent and followed by its utterances and answers.
-# Comments (lines starting with #) are ignored.
-
-# Here is an example intent, where the user wants to know about Alvar Aaalto.
-- intent: know.alvaraalto
-# The spacing, dashes, and indents in this format are strict, but the editor helps to align them. 
-  utterances:
 # We use a Natural Language Processing library (https://github.com/axa-group/nlp.js). It uses Levenshtein distance (https://en.wikipedia.org/wiki/Levenshtein_distance) to find the closest match between what the user wrote and available utterances to find the user intent.
+# Each intent starts with "- intent:" with a name for the intent and followed by its utterances and answers.
+
+# Here is an example of "intents", "utterances" (=questions) and "answers" where the user wants to know about "Alvar Aalto".
+- intent: know.alvaraalto
+# These are the questions (question mark not needed):
+  utterances:
     - who is Alvar Aalto
     - do you know Alvar Aalto
-# Then it chooses randomly an answer from here.
+# The answer is choosen randomly from these:
   answers:
     - Alvar Aalto is a Finnish architect and a designer.
     - Alvar Aalto founded the furniture company Artek!
 
-# Here is another example, where the user wants to know about the agent.
+
+# You may copy and edit the text above to create more "intents", "utterances" (=questions) and "answers". Rembmer to name your intents and start each intent with a dash and space!
+
+##########################################################
+More examples
+##########################################################
+
+# Here the user wants to know about the agent.
 - intent: agent.acquaintance
   utterances:
     - say about you
@@ -58,8 +64,10 @@ export default async function handler(req, res) {
     - I'm a virtual being, not a real person
     - I'm a conversational app
 
-# Here are examples of more advanced usage, inferring data entities from the user's text.
-###########################################################################################
+################################################################
+# Advanced usage, inferring data entities from the user's text.
+################################################################
+
 # Basic greeting - asks for username if not provided
 - intent: greetings.hello
   utterances:
