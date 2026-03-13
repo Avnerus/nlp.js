@@ -1,30 +1,36 @@
 import { neon } from '@neondatabase/serverless';
+import yaml from 'js-yaml';
 
 const sql = neon(process.env.DATABASE_URL);
 
 export default async function handler(req, res) {
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
 
   if (req.method !== 'GET' && req.method !== 'PUT') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
-  
+
   try {
     // Read professor from database
     const professorId = req.query.id || req.query.id;
     if (!professorId) {
       return res.status(400).json({ error: 'Professor ID required' });
     }
-    
-    const professor = await sql`SELECT * FROM professors WHERE id = ${Number(professorId)}`;
+
+    const professor = await sql`SELECT * FROM professors WHERE id = ${Number(
+      professorId
+    )}`;
     if (professor.length === 0) {
       return res.status(404).json({ error: 'Professor not found' });
     }
-    
+
     const professorData = professor[0];
-    
+
     if (req.method === 'GET') {
       res.status(200).json({
         id: professorData.id,
@@ -32,61 +38,40 @@ export default async function handler(req, res) {
         field: professorData.field,
         image: professorData.image,
         knowledge: professorData.knowledge || '',
-        entities: professorData.entities ? JSON.parse(professorData.entities) : {},
+        entities: professorData.entities
+          ? JSON.parse(professorData.entities)
+          : {},
         corpus: JSON.parse(professorData.corpus),
-        createdAt: professorData.created_at
+        createdAt: professorData.created_at,
       });
       return;
     }
-    
+
     if (req.method === 'PUT') {
       const { knowledge, entities, corpus } = req.body;
-      
+
       // Build the corpus from knowledge and entities
-      let corpusObj = {
-        name: "Corpus",
-        locale: "en-US"
+      const corpusObj = {
+        name: 'Corpus',
+        locale: 'en-US',
       };
-      
+
       // Add entities if provided
       if (entities && Object.keys(entities).length > 0) {
         corpusObj.entities = entities;
       }
-      
-      // Convert YAML knowledge to JSON and add to corpus
+
+      // Convert YAML knowledge to JSON and add to corpus using js-yaml
       if (knowledge && knowledge.trim()) {
         try {
-          // Parse YAML-like format (simplified)
-          const intents = [];
-          const lines = knowledge.split('\n');
-          let currentIntent = null;
-          
-          for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            const trimmed = line.trim();
-            
-            if (trimmed.startsWith('- intent:')) {
-              if (currentIntent) {
-                intents.push(currentIntent);
-              }
-              currentIntent = {
-                intent: trimmed.replace('- intent:', '').trim(),
-                utterances: [],
-                answers: []
-              };
-            } else if (trimmed.startsWith('- ') && currentIntent) {
-              const value = trimmed.substring(2);
-              if (i > 0 && lines[i-1].includes('utterances:')) {
-                currentIntent.utterances.push(value);
-              } else if (i > 0 && lines[i-1].includes('answers:')) {
-                currentIntent.answers.push(value);
-              }
-            }
+          const parsed = yaml.load(knowledge);
+          let intents = [];
+          if (Array.isArray(parsed)) {
+            intents = parsed;
+          } else if (parsed && parsed.intent) {
+            intents = [parsed];
           }
-          if (currentIntent) {
-            intents.push(currentIntent);
-          }
-          
+
           if (intents.length > 0) {
             corpusObj.data = intents;
           }
@@ -100,12 +85,12 @@ export default async function handler(req, res) {
           corpusObj.data = corpus.data;
         }
       }
-      
+
       // If entities provided separately (not in knowledge), add them
       if (entities && Object.keys(entities).length > 0 && !corpusObj.entities) {
         corpusObj.entities = entities;
       }
-      
+
       // Update corpus in database as JSON string
       await sql`
         UPDATE professors 
@@ -114,7 +99,7 @@ export default async function handler(req, res) {
             corpus = ${JSON.stringify(corpusObj)} 
         WHERE id = ${Number(professorId)}
       `;
-      
+
       res.status(200).json({
         id: professorData.id,
         name: professorData.name,
@@ -123,7 +108,7 @@ export default async function handler(req, res) {
         knowledge,
         entities: entities || {},
         corpus: corpusObj,
-        createdAt: professorData.created_at
+        createdAt: professorData.created_at,
       });
       return;
     }

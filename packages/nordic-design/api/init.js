@@ -4,9 +4,9 @@ import { neon } from '@neondatabase/serverless';
 const sql = neon(process.env.DATABASE_URL);
 
 export default async function handler(req, res) {
-    // Connect to the Neon database and create table if not exists
-    await sql.query('DROP TABLE IF EXISTS "professors"');
-    await sql.query(`
+  // Connect to the Neon database and create table if not exists
+  await sql.query('DROP TABLE IF EXISTS "professors"');
+  await sql.query(`
       CREATE TABLE "professors" (
         "id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "professors_id_seq"),
         "name" text NOT NULL,
@@ -18,9 +18,9 @@ export default async function handler(req, res) {
         "created_at" timestamp
       );
    `);
-   
-    // Upload knowledge.yaml template with comments
-    const knowledgeTemplate = `# Knowledge YAML Template
+
+  // Upload knowledge.yaml template with comments
+  const knowledgeTemplate = `# Knowledge YAML Template
 # This file defines the chatbot's knowledge using a simple YAML format.
 # Each intent starts with "- intent:" followed by its utterances and answers.
 # Comments (lines starting with #) are ignored.
@@ -73,40 +73,45 @@ export default async function handler(req, res) {
     - answer: "That's great to hear!"
       opts: "entities.username.option !== 'avner'"
 `;
-    
-    const knowledgeBlob = await put('knowledge.yaml', knowledgeTemplate, {
-      access: 'public',
-      contentType: 'text/yaml',
-      addRandomSuffix: false,
-      allowOverwrite: true
-    });
-    
-    // Upload entities.json template
-    const entitiesTemplate = JSON.stringify({
+
+  const knowledgeBlob = await put('knowledge.yaml', knowledgeTemplate, {
+    access: 'public',
+    contentType: 'text/yaml',
+    addRandomSuffix: false,
+    allowOverwrite: true,
+  });
+
+  // Upload entities.json template
+  const entitiesTemplate = JSON.stringify(
+    {
       username: {
         trim: [
           {
-            position: "afterLast",
-            words: ["am", "is", "name is"],
-            opts: { caseSensitive: false }
-          }
+            position: 'afterLast',
+            words: ['am', 'is', 'name is'],
+            opts: { caseSensitive: false },
+          },
         ],
         options: {
-          avner: ["Avner"]
-        }
-      }
-    }, null, 2);
-    
-    const entitiesBlob = await put('entities.json', entitiesTemplate, {
-      access: 'public',
-      contentType: 'application/json',
-      addRandomSuffix: false,
-      allowOverwrite: true
-    });
-    
-    res.status(200).json({
-      message: 'Database initialized with knowledge.yaml and entities.json templates',
-      knowledgeUrl: knowledgeBlob.url,
-      entitiesUrl: entitiesBlob.url
-    });
+          avner: ['Avner'],
+        },
+      },
+    },
+    null,
+    2
+  );
+
+  const entitiesBlob = await put('entities.json', entitiesTemplate, {
+    access: 'public',
+    contentType: 'application/json',
+    addRandomSuffix: false,
+    allowOverwrite: true,
+  });
+
+  res.status(200).json({
+    message:
+      'Database initialized with knowledge.yaml and entities.json templates',
+    knowledgeUrl: knowledgeBlob.url,
+    entitiesUrl: entitiesBlob.url,
+  });
 }

@@ -2,6 +2,7 @@ import { put, del } from '@vercel/blob';
 import { neon } from '@neondatabase/serverless';
 import path from 'path';
 import busboy from 'busboy';
+import yaml from 'js-yaml';
 
 export const config = {
   api: {
@@ -17,14 +18,14 @@ export default async function handler(req, res) {
   }
   if (req.method === 'POST') {
     req.on('data', (chunk) => {
-        // TODO: weird fix to get busboy to start processing
+      // TODO: weird fix to get busboy to start processing
     });
     return createProfessor(req, res);
   }
   if (req.method === 'DELETE') {
     return deleteProfessor(req, res);
   }
-  
+
   return res.status(405).json({ error: 'Method not allowed' });
 }
 
@@ -63,12 +64,16 @@ async function parseFormData(req) {
 
 async function listProfessors(req, res) {
   try {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate'
+    );
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
 
-    const professors = await sql`SELECT * FROM professors ORDER BY created_at DESC`;
-    
+    const professors =
+      await sql`SELECT * FROM professors ORDER BY created_at DESC`;
+
     res.status(200).json(professors);
   } catch (err) {
     console.error('Error fetching professors:', err);
@@ -81,64 +86,88 @@ async function createProfessor(req, res) {
     const { fields, imageFile } = await parseFormData(req);
     const name = fields.name || '';
     const field = fields.field || '';
-    
-    let imageUrl = 'https://ndxbhqxzhbvdiq8b.public.blob.vercel-storage.com/images/default.jpg';
+
+    let imageUrl =
+      'https://ndxbhqxzhbvdiq8b.public.blob.vercel-storage.com/images/default.jpg';
     if (imageFile) {
-      const { url } = await put(`images/professors/${imageFile.name}`, imageFile.buffer, { 
-        access: 'public',
-        cacheControlMaxAge: 31536000,
-        cacheTtl: 31536000,
-        addRandomSuffix: false
-      });
+      const { url } = await put(
+        `images/professors/${imageFile.name}`,
+        imageFile.buffer,
+        {
+          access: 'public',
+          cacheControlMaxAge: 31536000,
+          cacheTtl: 31536000,
+          addRandomSuffix: false,
+        }
+      );
       imageUrl = url;
     }
-    
+
     // Load knowledge.yaml template from blob
-    const knowledgeResponse = await fetch('https://ndxbhqxzhbvdiq8b.public.blob.vercel-storage.com/knowledge.yaml', {
-      cache: 'no-store'
-    });
-    
+    const knowledgeResponse = await fetch(
+      'https://ndxbhqxzhbvdiq8b.public.blob.vercel-storage.com/knowledge.yaml',
+      {
+        cache: 'no-store',
+      }
+    );
+
     if (!knowledgeResponse.ok) {
       throw new Error('Failed to load knowledge.yaml template');
     }
-    
+
     const knowledge = await knowledgeResponse.text();
-    
+
     // Load entities.json template from blob
-    const entitiesResponse = await fetch('https://ndxbhqxzhbvdiq8b.public.blob.vercel-storage.com/entities.json', {
-      cache: 'no-store'
-    });
-    
+    const entitiesResponse = await fetch(
+      'https://ndxbhqxzhbvdiq8b.public.blob.vercel-storage.com/entities.json',
+      {
+        cache: 'no-store',
+      }
+    );
+
     if (!entitiesResponse.ok) {
       throw new Error('Failed to load entities.json template');
     }
-    
+
     const entities = await entitiesResponse.json();
-    
+
     // Build corpus from knowledge and entities
     const corpus = {
-      name: "Corpus",
-      locale: "en-US"
+      name: 'Corpus',
+      locale: 'en-US',
     };
-    
+
     if (Object.keys(entities).length > 0) {
       corpus.entities = entities;
     }
-    
-    // Parse YAML knowledge to get the data array for corpus
-    const intents = parseYamlToData(knowledge);
+
+    // Parse YAML knowledge to get the data array for corpus using js-yaml
+    let intents = [];
+    try {
+      const parsed = yaml.load(knowledge);
+      if (Array.isArray(parsed)) {
+        intents = parsed;
+      } else if (parsed && parsed.intent) {
+        intents = [parsed];
+      }
+    } catch (err) {
+      console.error('Failed to parse YAML knowledge:', err);
+      intents = [];
+    }
     if (intents.length > 0) {
       corpus.data = intents;
     }
-    
+
     // Insert professor into database with all fields as text
     const timestamp = new Date();
     const professor = await sql`
       INSERT INTO professors (name, field, image, knowledge, entities, corpus, created_at)
-      VALUES (${name}, ${field}, ${imageUrl}, ${knowledge}, ${JSON.stringify(entities)}, ${JSON.stringify(corpus)}, ${timestamp})
+      VALUES (${name}, ${field}, ${imageUrl}, ${knowledge}, ${JSON.stringify(
+      entities
+    )}, ${JSON.stringify(corpus)}, ${timestamp})
       RETURNING id
     `;
-    
+
     const newProfessor = {
       id: professor[0].id,
       name,
@@ -147,9 +176,9 @@ async function createProfessor(req, res) {
       knowledge,
       entities,
       corpus,
-      createdAt: timestamp
+      createdAt: timestamp,
     };
-    
+
     res.status(201).json(newProfessor);
   } catch (err) {
     console.error('Error creating professor:', err);
@@ -157,88 +186,42 @@ async function createProfessor(req, res) {
   }
 }
 
-// Parse YAML knowledge to extract data array for corpus
-function parseYamlToData(yaml) {
-  if (!yaml || !yaml.trim()) {
-    return [];
-  }
-  
-  const intents = [];
-  const lines = yaml.split('\n');
-  let currentIntent = null;
-  
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const trimmed = line.trim();
-    
-    if (trimmed.startsWith('- intent:')) {
-      if (currentIntent) {
-        intents.push(currentIntent);
-      }
-      currentIntent = {
-        intent: trimmed.replace('- intent:', '').trim(),
-        utterances: [],
-        answers: []
-      };
-    } else if (trimmed.startsWith('- ') && currentIntent) {
-      const value = trimmed.substring(2);
-      if (i > 0 && lines[i-1].includes('utterances:')) {
-        currentIntent.utterances.push(value);
-      } else if (i > 0 && lines[i-1].includes('answers:')) {
-        // Handle object answers like "- answer: ... opts: ..."
-        if (value.startsWith('answer:')) {
-          // This is a complex answer with opts
-          currentIntent.answers.push({ answer: value.replace('answer:', '').trim() });
-        } else if (value.startsWith('opts:')) {
-          // Add opts to the last answer
-          if (currentIntent.answers.length > 0 && typeof currentIntent.answers[currentIntent.answers.length - 1] === 'object') {
-            currentIntent.answers[currentIntent.answers.length - 1].opts = value.replace('opts:', '').trim();
-          }
-        } else if (value.startsWith('mandatory:')) {
-          // slotFilling - we'll ignore for now as it's complex
-        } else {
-          currentIntent.answers.push(value);
-        }
-      }
-    }
-  }
-  
-  if (currentIntent) {
-    intents.push(currentIntent);
-  }
-  
-  return intents;
-}
-
 async function deleteProfessor(req, res) {
   try {
     const { id } = req.body;
-    
+
     if (!id) {
       return res.status(400).json({ error: 'Professor ID is required' });
     }
-    
+
     // Find the professor to delete
-    const professor = await sql`SELECT * FROM professors WHERE id = ${Number(id)}`;
+    const professor = await sql`SELECT * FROM professors WHERE id = ${Number(
+      id
+    )}`;
     if (professor.length === 0) {
       return res.status(404).json({ error: 'Professor not found' });
     }
-    
+
     const professorData = professor[0];
-    
+
     // Delete the professor's image from blob if it's not the default
-    if (professorData.image && !professorData.image.includes('default-professor.jpg')) {
+    if (
+      professorData.image &&
+      !professorData.image.includes('default-professor.jpg')
+    ) {
       try {
         await del(professorData.image);
       } catch (err) {
         console.error('Error deleting image:', err);
       }
     }
-    
+
     // Delete the professor from database
     await sql`DELETE FROM professors WHERE id = ${Number(id)}`;
-    
-    res.status(200).json({ success: true, message: 'Professor deleted successfully' });
+
+    res
+      .status(200)
+      .json({ success: true, message: 'Professor deleted successfully' });
   } catch (err) {
     console.error('Error deleting professor:', err);
     res.status(500).json({ error: 'Failed to delete professor' });

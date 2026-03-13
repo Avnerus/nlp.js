@@ -1,14 +1,13 @@
 import { dockStart } from '@nlpjs/basic';
-const SETTINGS = 
-{
+
+const SETTINGS = {
   settings: {
     nlp: {
-      corpora: [
-      ]
-    }
+      corpora: [],
+    },
   },
-  use: ["Basic"]
-}
+  use: ['Basic'],
+};
 
 /**
  * Create an NLP instance from a custom corpus file
