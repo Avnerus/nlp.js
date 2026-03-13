@@ -286,12 +286,13 @@
     </script>
 
     <script type="module">
-      import { EditorView, basicSetup } from "codemirror";
+      import { EditorView, basicSetup, EditorState } from "codemirror";
       import { yaml } from "@codemirror/lang-yaml";
       import { autocompletion } from "@codemirror/autocomplete";
       import { keymap } from "@codemirror/view";
       import { indentUnit } from "@codemirror/language";
       import { Prec } from "@codemirror/state";
+      import { lineWrapping } from "@codemirror/view";
 
       const smartYamlEnter = ({ state, dispatch }) => {
         const line = state.doc.lineAt(state.selection.main.head);
@@ -338,16 +339,20 @@
       }
 
       window.yamlView = new EditorView({
-        doc: "",
-        extensions: [
-          Prec.highest(keymap.of([
-          { key: "Enter", run: smartYamlEnter }
-          ])),
-          basicSetup,
-          yaml(),
-          indentUnit.of("  "), 
-          autocompletion({ override: [myCompletions] })
-        ],
+        doc: "- intent: greetings.hello\n  utterances:\n    - hello\n    - hi\n  answers:\n    - Hi there!\n",
+        state: EditorState.create({
+          doc: "- intent: greetings.hello\n  utterances:\n    - hello\n    - hi\n  answers:\n    - Hi there!\n",
+          extensions: [
+            basicSetup,
+            Prec.highest(keymap.of([
+            { key: "Enter", run: smartYamlEnter }
+            ])),
+            lineWrapping(),
+            yaml(),
+            indentUnit.of("  "), 
+            autocompletion({ override: [myCompletions] })
+          ]
+        }),
         parent: document.getElementById("yaml-editor-container")
       });
       loadProfessor();
