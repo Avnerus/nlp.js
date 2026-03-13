@@ -41,6 +41,18 @@ export default async function handler(req, res) {
 
 # You may copy and edit the text above to create more "intents", "utterances" (=questions) and "answers". Rembmer to name your intents and start each intent with a dash and space!
 
+
+
+
+
+# This is the default response
+- intent: None
+  utterances:
+    - what should I do
+  answers:
+    - I know!
+    - Great question!
+
 ##########################################################
 # More examples
 ##########################################################
