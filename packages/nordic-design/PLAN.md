@@ -45,7 +45,7 @@ We need to build a web application where students can create custom chatbots mod
   ```json
   {
     "id": 1,
-    "name": "Jane Doe",
+    "name": "Ingrid Nordman",
     "field": "Industrial & Product Design",
     "image": "https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/images/professors/...",
     "knowledge": "- intent: greetings.hello\n  utterances:\n    - hello\n  answers:\n    - Hi!\n",
