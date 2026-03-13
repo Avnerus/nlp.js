@@ -25,11 +25,21 @@ export default async function handler(req, res) {
 # Each intent starts with "- intent:" with a name for the intent and followed by its utterances and answers.
 # Comments (lines starting with #) are ignored.
 
-# Here is an example intent, when the user wants to know about the agent.
-- intent: agent.acquaintance
+# Here is an example intent, where the user wants to know about Alvar Aaalto.
+- intent: know.alvaraalto
 # The spacing, dashes, and indents in this format are strict, but the editor helps to align them. 
   utterances:
 # We use a Natural Language Processing library (https://github.com/axa-group/nlp.js). It uses Levenshtein distance (https://en.wikipedia.org/wiki/Levenshtein_distance) to find the closest match between what the user wrote and available utterances to find the user intent.
+    - who is Alvar Aalto
+    - do you know Alvar Aalto
+# Then it chooses randomly an answer from here.
+  answers:
+    - Alvar Aalto is a Finnish architect and a designer.
+    - Alvar Aalto founded the furniture company Artek!
+
+# Here is another example, where the user wants to know about the agent.
+- intent: agent.acquaintance
+  utterances:
     - say about you
     - why are you here
     - what is your personality
@@ -57,14 +67,15 @@ export default async function handler(req, res) {
     - hi
     - howdy
   answers:
-    - "{{ username === 'Avner' ? 'My creator! (along with fattybear). Honored to meet you.' : 'Greetings ' + username + '! Nice to meet you!' }}"
+    - "{{ username === 'Student' ? 'My creator! (along with fattybear). Honored to meet you.' : 'Greetings ' + username + '! Nice to meet you!' }}"
+# This section means that if the username entity was not filled, the bot should fill it with the following question.
   slotFilling:
     username:
       mandatory: true
       question: "I don't think we've met! What is your name?"
 
 
-# Likes the user - gives different response for Avner vs others
+# Likes the user - gives different response for student vs others
 - intent: user.likeagent
   utterances:
     - I like you
@@ -73,11 +84,11 @@ export default async function handler(req, res) {
     - I like you so much
   answers:
     - answer: "Of course, because you created me."
-      opts: "entities.username.option === 'avner'"
+      opts: "entities.username.option === 'student'"
     - answer: "Likewise!"
-      opts: "entities.username.option !== 'avner'"
+      opts: "entities.username.option !== 'student'"
     - answer: "That's great to hear!"
-      opts: "entities.username.option !== 'avner'"
+      opts: "entities.username.option !== 'student'"
 `;
 
   const knowledgeBlob = await put('knowledge.yaml', knowledgeTemplate, {
@@ -99,7 +110,7 @@ export default async function handler(req, res) {
           },
         ],
         options: {
-          avner: ['Avner'],
+          student: ['Student'],
         },
       },
     },
