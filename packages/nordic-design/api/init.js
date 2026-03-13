@@ -22,10 +22,13 @@ export default async function handler(req, res) {
   // Upload knowledge.yaml template with comments
   const knowledgeTemplate = `# Knowledge YAML Template
 # This file defines the chatbot's knowledge using a simple YAML format.
+
 # We use a Natural Language Processing library (https://github.com/axa-group/nlp.js). It uses Levenshtein distance (https://en.wikipedia.org/wiki/Levenshtein_distance) to find the closest match between what the user wrote and available utterances to find the user intent.
+
 # Each intent starts with "- intent:" with a name for the intent and followed by its utterances and answers.
 
 # Here is an example of "intents", "utterances" (=questions) and "answers" where the user wants to know about "Alvar Aalto".
+
 - intent: know.alvaraalto
 # These are the questions (question mark not needed):
   utterances:
@@ -40,7 +43,7 @@ export default async function handler(req, res) {
 # You may copy and edit the text above to create more "intents", "utterances" (=questions) and "answers". Rembmer to name your intents and start each intent with a dash and space!
 
 ##########################################################
-More examples
+# More examples
 ##########################################################
 
 # Here the user wants to know about the agent.
