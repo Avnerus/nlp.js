@@ -17,7 +17,6 @@
           "@codemirror/commands": "https://esm.sh/@codemirror/commands",
           "@codemirror/autocomplete": "https://esm.sh/@codemirror/autocomplete",
           "@codemirror/lang-yaml": "https://esm.sh/@codemirror/lang-yaml",
-          "@codemirror/theme-one-dark": "https://esm.sh/@codemirror/theme-one-dark",
           "codemirror": "https://esm.sh/codemirror",
           "js-yaml": "https://esm.sh/js-yaml"
         }
@@ -289,10 +288,10 @@
     <script type="module">
       import { EditorView, basicSetup } from "codemirror";
       import { yaml } from "@codemirror/lang-yaml";
-      import { oneDark } from "@codemirror/theme-one-dark";
       import { autocompletion } from "@codemirror/autocomplete";
       import { keymap } from "@codemirror/view";
       import { indentUnit } from "@codemirror/language";
+      import { Prec } from "@codemirror/state";
 
       const smartYamlEnter = ({ state, dispatch }) => {
         const line = state.doc.lineAt(state.selection.main.head);
@@ -339,13 +338,15 @@
       }
 
       window.yamlView = new EditorView({
-        doc: "- intent: greetings.hello\n  utterances:\n    - hello\n    - hi\n  answers:\n    - Hi there!\n",
+        doc: "",
         extensions: [
+          Prec.highest(keymap.of([
+          { key: "Enter", run: smartYamlEnter }
+          ])),
           basicSetup,
           yaml(),
           indentUnit.of("  "), 
-          autocompletion({ override: [myCompletions] }),
-          keymap.of([{ key: "Enter", run: smartYamlEnter }])
+          autocompletion({ override: [myCompletions] })
         ],
         parent: document.getElementById("yaml-editor-container")
       });

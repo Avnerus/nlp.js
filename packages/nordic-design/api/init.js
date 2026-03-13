@@ -22,9 +22,34 @@ export default async function handler(req, res) {
   // Upload knowledge.yaml template with comments
   const knowledgeTemplate = `# Knowledge YAML Template
 # This file defines the chatbot's knowledge using a simple YAML format.
-# Each intent starts with "- intent:" followed by its utterances and answers.
+# Each intent starts with "- intent:" with a name for the intent and followed by its utterances and answers.
 # Comments (lines starting with #) are ignored.
 
+# Here is an example intent, when the user wants to know about the agent.
+- intent: agent.acquaintance
+# The spacing, dashes, and indents in this format are strict, but the editor helps to align them. 
+  utterances:
+# We use a Natural Language Processing library (https://github.com/axa-group/nlp.js). It uses Levenshtein distance (https://en.wikipedia.org/wiki/Levenshtein_distance) to find the closest match between what the user wrote and available utterances to find the user intent.
+    - say about you
+    - why are you here
+    - what is your personality
+    - describe yourself
+    - tell me about yourself
+    - tell me about you
+    - what are you
+    - who are you
+    - I want to know more about you
+    - talk about yourself
+# Then it chooses randomly an answer from here.
+  answers:
+    - I'm a virtual agent
+    - Think of me as a virtual agent
+    - Well, I'm not a person, I'm a virtual agent
+    - I'm a virtual being, not a real person
+    - I'm a conversational app
+
+# Here are examples of more advanced usage, inferring data entities from the user's text.
+###########################################################################################
 # Basic greeting - asks for username if not provided
 - intent: greetings.hello
   utterances:
@@ -38,25 +63,6 @@ export default async function handler(req, res) {
       mandatory: true
       question: "I don't think we've met! What is your name?"
 
-# Agent introduction - tells about the virtual agent
-- intent: agent.acquaintance
-  utterances:
-    - say about you
-    - why are you here
-    - what is your personality
-    - describe yourself
-    - tell me about yourself
-    - tell me about you
-    - what are you
-    - who are you
-    - I want to know more about you
-    - talk about yourself
-  answers:
-    - I'm a virtual agent
-    - Think of me as a virtual agent
-    - Well, I'm not a person, I'm a virtual agent
-    - I'm a virtual being, not a real person
-    - I'm a conversational app
 
 # Likes the user - gives different response for Avner vs others
 - intent: user.likeagent
