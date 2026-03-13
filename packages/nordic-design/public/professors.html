@@ -17,6 +17,7 @@
           "@codemirror/commands": "https://esm.sh/@codemirror/commands",
           "@codemirror/autocomplete": "https://esm.sh/@codemirror/autocomplete",
           "@codemirror/lang-yaml": "https://esm.sh/@codemirror/lang-yaml",
+          "@codemirror/lint": "https://esm.sh/@codemirror/lint",
           "codemirror": "https://esm.sh/codemirror",
           "js-yaml": "https://esm.sh/js-yaml"
         }
@@ -251,7 +252,11 @@
           }
         } catch (err) {
           console.error('Failed to parse YAML knowledge:', err);
-          knowledgeJson = { data: [] };
+          alert("❌ Cannot save! Please fix the red errors in your YAML first.");
+          saveBtn.disabled = false;
+          saveSpinner.style.display = 'none';
+          saveBtnText.textContent = 'Save and test';
+          return;
         }
         
         // Build corpus
@@ -333,89 +338,11 @@
           }
         } catch (err) {
           console.error('Failed to parse YAML knowledge:', err);
-          knowledgeJson = { data: [] };
-        }
-        
-        // Build corpus
-        const corpus = {
-          name: "Corpus",
-          locale: "en-US"
-        };
-        
-        if (Object.keys(entities).length > 0) {
-          corpus.entities = entities;
-        }
-        
-        if (knowledgeJson.data && knowledgeJson.data.length > 0) {
-          corpus.data = knowledgeJson.data;
-        }
-        
-        try {
-          const response = await fetch(`/api/professors/${professorId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              knowledge: yamlKnowledge,
-              entities: entities,
-              corpus: corpus
-            })
-          });
-          
-          if (response.ok) {
-            window.location.href = `/chat.html?id=${professorId}`;
-          } else {
-            const err = await response.json();
-            alert(`Error: ${err.error}`);
-          }
-        } catch (err) {
-          alert('Failed to save: ' + err.message);
-        } finally {
+          alert("❌ Cannot save! Please fix the red errors in your YAML first.");
           saveBtn.disabled = false;
           saveSpinner.style.display = 'none';
-          saveBtnText.textContent = 'Save and test';
-        }
-      });
-
-      document.getElementById('saveAndTestBtn').addEventListener('click', async (e) => {
-        e.preventDefault();
-        
-        const saveBtn = document.getElementById('saveAndTestBtn');
-        const saveSpinner = document.getElementById('saveAndTestSpinner');
-        const saveBtnText = document.getElementById('saveAndTestBtnText');
-        
-        saveBtn.disabled = true;
-        saveSpinner.style.display = 'block';
-        saveBtnText.textContent = 'Saving...';
-        
-        const yamlKnowledge = window.yamlView.state.doc.toString();
-        const entitiesText = document.getElementById('entitiesEditor').value;
-        
-        let entities = {};
-        try {
-          if (entitiesText.trim()) {
-            entities = JSON.parse(entitiesText);
-          }
-        } catch (err) {
-          alert('Invalid JSON in entities editor');
-          saveBtn.disabled = false;
-          saveSpinner.style.display = 'none';
-          saveBtnText.textContent = 'Save and test';
+          saveBtnText.textContent = 'Save Changes';
           return;
-        }
-        
-        // Use js-yaml to parse YAML to JSON
-        let knowledgeJson = { data: [] };
-        try {
-          const yaml = await import('js-yaml');
-          const parsed = yaml.load(yamlKnowledge);
-          if (Array.isArray(parsed)) {
-            knowledgeJson = { data: parsed };
-          } else if (parsed && parsed.intent) {
-            knowledgeJson = { data: [parsed] };
-          }
-        } catch (err) {
-          console.error('Failed to parse YAML knowledge:', err);
-          knowledgeJson = { data: [] };
         }
         
         // Build corpus
@@ -466,6 +393,8 @@
       import { keymap } from "@codemirror/view";
       import { indentUnit } from "@codemirror/language";
       import { Prec } from "@codemirror/state";
+      import { linter, lintGutter } from "@codemirror/lint";
+      import yamlParser from "js-yaml";
 
       const smartYamlEnter = ({ state, dispatch }) => {
         const line = state.doc.lineAt(state.selection.main.head);
@@ -494,6 +423,30 @@
         return false;
       };
 
+      const yamlLinter = linter((view) => {
+        const diagnostics = [];
+        const text = view.state.doc.toString();
+
+        try {
+          // Attempt to parse the YAML
+          yamlParser.load(text);
+        } catch (e) {
+          // If it fails, js-yaml provides 'mark' with line and column
+          if (e.mark) {
+            const pos = e.mark.position;
+            // We push a diagnostic to the list
+            diagnostics.push({
+              from: pos,
+              to: pos + 1, // Highlight at least one character
+              severity: "error",
+              message: e.reason,
+              // Optional: show a specific action if you want
+            });
+          }
+        }
+        return diagnostics;
+      });
+
       const nlpCompletions = [
         { label: "intent", type: "keyword", detail: "A name of the user's intention" },
         { label: "utterances", type: "keyword", detail: "What the user might say" },
@@ -521,6 +474,8 @@
           EditorView.lineWrapping,
           yaml(),
           indentUnit.of("  "), 
+          lintGutter(), 
+          yamlLinter,
           autocompletion({ override: [myCompletions] })
         ],
         parent: document.getElementById("yaml-editor-container")
