@@ -22,7 +22,6 @@ export async function createNlp(corpus, locale = 'en') {
 
   // Prebuild actions
   nlp.registerActionFunction('setContext', async (data, key, value) => {
-    console.log("SET CONTEXT!", key, value);
     data.context[key] = value;
     return data;
   });
