@@ -50,15 +50,15 @@ We need to build a web application where students can create custom chatbots mod
     "image": "https://0tq3xjdzh1emkcko.public.blob.vercel-storage.com/images/professors/...",
     "knowledge": "- intent: greetings.hello\n  utterances:\n    - hello\n  answers:\n    - Hi!\n",
     "entities": {"username": {...}},
-    "corpus": {"name": "Corpus", "locale": "en-US", "data": [...], "entities": {...}},
     "created_at": "2026-03-12T10:00:00.000Z"
   }
   ```
-  - **Schema:** `id` (integer, auto-increment), `name`, `field`, `image`, `knowledge` (text/YAML), `entities` (text/JSON), `corpus` (text/JSON), `created_at`
+  - **Schema:** `id` (integer, auto-increment), `name`, `field`, `image`, `knowledge` (text/YAML), `entities` (text/JSON), `created_at`
+  - **Note:** `corpus` field removed from database (March 2026) — built dynamically from knowledge + entities for NLP processing
 
-- **Knowledge:** Stored in Neon database as YAML text
+- **Knowledge:** Stored in Neon database as YAML text (raw template with comments preserved)
 - **Entities:** Stored in Neon database as JSON text
-- **Corpus:** Merged JSON stored as text in database
+- **Corpus:** Built dynamically in memory by merging knowledge (YAML) + entities (JSON) for NLP engine
 - **Images:** Stored in Vercel Blob (`images/professors/` prefix)
 - **Templates:** `knowledge.yaml` and `entities.json` in Vercel Blob
 
@@ -95,19 +95,19 @@ To deploy:
    - `cors` for CORS headers
 
 2. **Database initialization (`/api/init.js`)**
-   - Creates `professors` table with schema:
+   - Creates `professors` table with schema (corpus field removed):
      ```sql
      CREATE TABLE "professors" (
        "id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
        "name" text NOT NULL,
        "field" text,
        "image" text,
-       "knowledge" text,      -- YAML format
+       "knowledge" text,      -- YAML format (raw template with comments)
        "entities" text,       -- JSON format
-       "corpus" text,         -- Merged JSON
        "created_at" timestamp
      );
      ```
+   - `corpus` field removed from database — built dynamically in `/api/chat` from knowledge + entities
    - Creates `knowledge.yaml` template in Vercel Blob (with inline comments)
    - Creates `entities.json` template in Vercel Blob
 
@@ -117,8 +117,7 @@ To deploy:
      - Upload image to Vercel Blob
      - Load `knowledge.yaml` template from blob
      - Load `entities.json` template from blob
-     - Parse YAML knowledge to JSON for corpus
-     - Insert into database with `RETURNING id`
+     - Insert YAML knowledge and JSON entities directly into database with `RETURNING id`
      - Return professor object with integer ID
    - `DELETE /api/professors` — Delete professor:
      - Delete image from blob using `del()`
@@ -126,15 +125,16 @@ To deploy:
 
 4. **Professor detail operations (`/api/professors/[id]`)**
    - `GET /api/professors/[id]` — Fetch professor + knowledge (YAML) + entities (JSON) from database
-   - `PUT /api/professors/[id]` — Update knowledge (YAML), entities (JSON), and corpus in database
-     - Parses YAML knowledge to JSON
-     - Merges knowledge + entities into corpus
+   - `PUT /api/professors/[id]` — Update knowledge (YAML), entities (JSON) in database
+     - Saves raw YAML knowledge without parsing
+     - Saves entities as JSON string
+     - No corpus field — built dynamically in `/api/chat`
 
 5. **Chat endpoint (`/api/chat`)**
    - Accepts `{ professorId, message, context, locale }`
    - Fetches professor from database by integer ID
-   - Parses corpus JSON and passes to NLP engine
-   - Returns chatbot response
+   - Builds corpus dynamically by parsing YAML knowledge + JSON entities
+   - Passes corpus to NLP engine and returns chatbot response
 
 ### Phase 2: NLP.js Integration
 
@@ -144,9 +144,8 @@ To deploy:
    - Returns trained NLP instance
 
 2. **Corpus storage**
-   - Individual professor corpora stored in database as JSON text
-   - Corpus is built from knowledge (YAML) + entities (JSON)
-   - Chat endpoint parses corpus JSON before passing to NLP engine
+   - No corpus stored in database — built dynamically from knowledge (YAML) + entities (JSON)
+   - Chat endpoint parses YAML knowledge to JSON and merges with entities before passing to NLP engine
 
 ### Phase 3: Frontend - HTML version for Vercel static hosting
 
@@ -169,7 +168,8 @@ To deploy:
    - **Entities Editor (Plain Text):**
      - Textarea for editing entities JSON
      - Parses JSON before saving
-   - "Save" button → `PUT /api/professors/[id]` with knowledge, entities, corpus
+   - "Save" button → `PUT /api/professors/[id]` with knowledge (YAML) and entities (JSON)
+   - Corpus is built dynamically in `/api/chat`
    - "Test Chatbot" link → `/chat.html?id=[id]`
 
 3. **`/public/chat.html`** - Chat interface
@@ -184,9 +184,9 @@ To deploy:
 
 **1. Database Schema**
 - Integer `id` with `GENERATED ALWAYS AS IDENTITY` (auto-increment)
-- `knowledge` stored as text type (YAML string)
+- `knowledge` stored as text type (YAML string, raw with comments)
 - `entities` stored as text type (JSON string)
-- `corpus` stored as text type (merged JSON string)
+- `corpus` field removed (built dynamically from YAML + JSON in `/api/chat`)
 - `created_at` timestamp for ordering
 
 **2. Vercel Blob Image Deletion**
@@ -224,6 +224,13 @@ To deploy:
 - Entities stored separately as JSON (advanced users only)
 - Corpus is dynamically built by merging knowledge + entities
 - Templates provide safe defaults for both
+
+**9. Corpus Removed from Database (March 2026)**
+- `corpus` field removed from Neon database schema
+- Knowledge is stored as raw YAML with comments preserved (no parsing during save)
+- Corpus is built dynamically in `/api/chat` endpoint from YAML + JSON
+- Easier to maintain and reduces database storage
+- Supports multiline answers in YAML via `|` syntax (see init.js for example)
 
 ---
 
@@ -277,7 +284,7 @@ To deploy:
   "@vercel/blob": "^0.23.0",
   "busboy": "^1.6.0",
   "cors": "^2.8.5",
-  "js-yaml": "^4.1.0"
+  "js-yaml": "^4.1.1"
 }
 ```
 
@@ -366,6 +373,18 @@ await sql`DELETE FROM professors WHERE id = ${Number(id)}`;
 - **Neon SQL syntax** — Use template strings: `await sql\`SELECT * FROM table WHERE id = \${id}\``
 - **YAML format** — Array of intents starting with `- intent:`
 - **Entities** — Optional, advanced users only; leave empty to use template defaults
+
+---
+
+## Vendor Bundling (March 2026)
+
+For Vercel static hosting, CodeMirror dependencies are bundled into a single file:
+
+- **Script:** `scripts/bundle-vendor.js` — bundles ESM vendor libraries into `public/vendor.bundle.js`
+- **Source:** `scripts/vendor-source.js` — exports CodeMirror + js-yaml modules
+- **Import map:** `public/professors.html` uses import map to load vendor bundle from `./vendor.bundle.js`
+
+This avoids external CDN dependencies and improves reliability for the YAML editor in professors.html.
 
 ---
 
