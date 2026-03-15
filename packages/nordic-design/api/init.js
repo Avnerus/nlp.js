@@ -35,21 +35,20 @@ export default async function handler(req, res) {
     - do you know Alvar Aalto
 # The answer is choosen randomly from these:
   answers:
-    - Alvar Aalto is a Finnish architect and a designer.
-    - Alvar Aalto founded the furniture company Artek!
+    - Alvar Aalto was a Finnish architect and designer. One of the greatest modernists and also known for his furniture design.
+    - Alvar Aalto founded the furniture company Artek. The company still exists and manufactures and sells original works designed by Aalto.
 
 # You may copy and edit the text above to create more "intents", "utterances" (=questions) and "answers". Rembmer to name your intents and start each intent with a dash and space!
 
-
-# Here is an example of an answer with multiple lines. It should start with the symbol "|", followed be each line starting at the same column.
-- intent: agent.fields
+# Here is an example of an answer with multiple lines / paragaphs. It should start with the symbol "|", followed be each line starting at the same column.
+- intent: agent.aaltosbuildings
   utterances:
-    - what are your fields of expertise
-    - what fields do you teach
+    - what are the most important buildings Alvar Aalto designed
   answers: 
     - |
-      1. Industrial design.
-      2. Product design.
+      Alvar's most famous works of architecture are in Finland. For instance, Paimio Sanatorium close to Turku and FInlandia Hall in Helsinki are considered as international master pieces.
+      Aalto never really made an international carrier, although he was a professor of MIT in USA during the war time, in 1940's. While at MIT, he designed the iconic Baker House student dormitory.
+
 
 # This is the default response
 - intent: None
