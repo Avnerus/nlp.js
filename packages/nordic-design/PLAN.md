@@ -396,4 +396,30 @@ npm run dev
 
 ---
 
+## Browser Testing
+
+**Test the app in the browser (production):**
+
+1. Deploy to Vercel (with `--prod`):
+   ```bash
+   export VERCEL_TOKEN=$(cat /run/secrets/vercel-token)
+   npx vercel --prod -t "$VERCEL_TOKEN" --yes
+   ```
+
+2. Open the production URL in your browser (e.g., `https://nordic-design-theta.vercel.app`)
+
+3. Test the following flows:
+   - Create a new professor (name, field, optional image)
+   - Chat with an existing professor by clicking "Start Chatting"
+   - Test simple greetings like "hi" or "hello"
+   - Verify the professor responds based on the YAML knowledge
+
+4. For local testing, run:
+   ```bash
+   npm run dev
+   ```
+   Then open `http://localhost:3000`
+
+---
+
 **Ready for review.** All features implemented and tested.
