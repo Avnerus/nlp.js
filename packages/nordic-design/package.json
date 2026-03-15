@@ -16,7 +16,9 @@
   "scripts": {
     "test": "vitest",
     "test:api": "vitest __tests__/api.test.js",
-    "test:nlp": "vitest __tests__/nlp-engine.test.js"
+    "test:nlp": "vitest __tests__/nlp-engine.test.js",
+    "bundle-vendor": "node scripts/bundle-vendor.js",
+    "dev": "npm run build-vendor"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
@@ -33,6 +35,14 @@
     "js-yaml": "^4.1.1"
   },
   "devDependencies": {
+    "@codemirror/autocomplete": "^6.20.1",
+    "@codemirror/lang-yaml": "^6.1.2",
+    "@codemirror/language": "^6.12.2",
+    "@codemirror/lint": "^6.9.5",
+    "@codemirror/state": "^6.6.0",
+    "@codemirror/view": "^6.40.0",
+    "codemirror": "^6.0.2",
+    "esbuild": "^0.27.4",
     "vitest": "^1.6.0"
   }
 }

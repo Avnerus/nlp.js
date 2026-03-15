@@ -11,15 +11,14 @@
     <script type="importmap">
       {
         "imports": {
-          "@codemirror/state": "https://esm.sh/@codemirror/state",
-          "@codemirror/view": "https://esm.sh/@codemirror/view",
-          "@codemirror/language": "https://esm.sh/@codemirror/language",
-          "@codemirror/commands": "https://esm.sh/@codemirror/commands",
-          "@codemirror/autocomplete": "https://esm.sh/@codemirror/autocomplete",
-          "@codemirror/lang-yaml": "https://esm.sh/@codemirror/lang-yaml",
-          "@codemirror/lint": "https://esm.sh/@codemirror/lint",
-          "codemirror": "https://esm.sh/codemirror",
-          "js-yaml": "https://esm.sh/js-yaml"
+          "@codemirror/state": "./vendor.bundle.js",
+          "@codemirror/view": "./vendor.bundle.js",
+          "@codemirror/language": "./vendor.bundle.js",
+          "@codemirror/autocomplete": "./vendor.bundle.js",
+          "@codemirror/lang-yaml": "./vendor.bundle.js",
+          "@codemirror/lint": "./vendor.bundle.js",
+          "codemirror": "./vendor.bundle.js",
+          "js-yaml": "./vendor.bundle.js"
         }
       }
     </script>
@@ -379,7 +378,7 @@
       import { indentUnit } from "@codemirror/language";
       import { Prec } from "@codemirror/state";
       import { linter, lintGutter } from "@codemirror/lint";
-      import yamlParser from "js-yaml";
+      import { yamlParser } from "js-yaml";
 
       const smartYamlEnter = ({ state, dispatch }) => {
         const line = state.doc.lineAt(state.selection.main.head);
