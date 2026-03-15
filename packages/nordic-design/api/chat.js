@@ -1,5 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 import { createNlp } from '../src/nlp-engine.js';
+import yaml from 'js-yaml';
 
 
 export default async function handler(req, res) {
@@ -36,9 +37,15 @@ export default async function handler(req, res) {
     }
 
     const professorData = professor[0];
+    const corpusObj = {
+      name: 'Corpus',
+      locale: 'en-US',
+    };
+    corpusObj.data = yaml.load(professorData.knowledge);
+    corpusObj.entities = JSON.parse(professorData.entities);
 
     // Load NLP with corpus from database
-    const nlp = await createNlp(JSON.parse(professorData.corpus), locale);
+    const nlp = await createNlp(corpusObj, locale);
     const response = await nlp.process(locale, message, context);
 
     res.status(200).json({ answer: response.answer, context });

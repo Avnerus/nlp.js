@@ -14,7 +14,6 @@ export default async function handler(req, res) {
         "image" text,
         "knowledge" text,
         "entities" text,
-        "corpus" text,
         "created_at" timestamp
       );
    `);
@@ -42,8 +41,15 @@ export default async function handler(req, res) {
 # You may copy and edit the text above to create more "intents", "utterances" (=questions) and "answers". Rembmer to name your intents and start each intent with a dash and space!
 
 
-
-
+# Here is an example of an answer with multiple lines. It should start with the symbol "|", followed be each line starting at the same column.
+- intent: agent.fields
+  utterances:
+    - what are your fields of expertise
+    - what fields do you teach
+  answers: 
+    - |
+      1. Industrial design.
+      2. Product design.
 
 # This is the default response
 - intent: None
@@ -53,11 +59,20 @@ export default async function handler(req, res) {
     - I know!
     - Great question!
 
+# This is the initial greeting
+- intent: greetings.hello
+  utterances:
+    - hello
+    - hi
+    - howdy
+  answers:
+    - Greetings! Nice to meet you!
+
 ##########################################################
 # More examples
 ##########################################################
 
-# Here the user wants to know about the agent.
+# Here the user wants to know more about the agent.
 - intent: agent.acquaintance
   utterances:
     - say about you
@@ -78,16 +93,17 @@ export default async function handler(req, res) {
     - I'm a virtual being, not a real person
     - I'm a conversational app
 
+
+
+
 ################################################################
 # Advanced usage, inferring data entities from the user's text.
 ################################################################
 
-# Basic greeting - asks for username if not provided
-- intent: greetings.hello
+# Asks for username if not provided
+- intent: greetings.doyouknow
   utterances:
-    - hello
-    - hi
-    - howdy
+    - do you know who I am
   answers:
     - "{{ username === 'Student' ? 'My creator! (along with fattybear). Honored to meet you.' : 'Greetings ' + username + '! Nice to meet you!' }}"
 # This section means that if the username entity was not filled, the bot should fill it with the following question.

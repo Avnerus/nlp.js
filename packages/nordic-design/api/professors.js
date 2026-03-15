@@ -134,40 +134,11 @@ async function createProfessor(req, res) {
 
     const entities = await entitiesResponse.json();
 
-    // Build corpus from knowledge and entities
-    const corpus = {
-      name: 'Corpus',
-      locale: 'en-US',
-    };
-
-    if (Object.keys(entities).length > 0) {
-      corpus.entities = entities;
-    }
-
-    // Parse YAML knowledge to get the data array for corpus using js-yaml
-    let intents = [];
-    try {
-      const parsed = yaml.load(knowledge);
-      if (Array.isArray(parsed)) {
-        intents = parsed;
-      } else if (parsed && parsed.intent) {
-        intents = [parsed];
-      }
-    } catch (err) {
-      console.error('Failed to parse YAML knowledge:', err);
-      intents = [];
-    }
-    if (intents.length > 0) {
-      corpus.data = intents;
-    }
-
     // Insert professor into database with all fields as text
     const timestamp = new Date();
     const professor = await sql`
-      INSERT INTO professors (name, field, image, knowledge, entities, corpus, created_at)
-      VALUES (${name}, ${field}, ${imageUrl}, ${knowledge}, ${JSON.stringify(
-      entities
-    )}, ${JSON.stringify(corpus)}, ${timestamp})
+      INSERT INTO professors (name, field, image, knowledge, entities, created_at)
+      VALUES (${name}, ${field}, ${imageUrl}, ${knowledge}, ${JSON.stringify(entities)}, ${timestamp})
       RETURNING id
     `;
 
@@ -178,7 +149,6 @@ async function createProfessor(req, res) {
       image: imageUrl,
       knowledge,
       entities,
-      corpus,
       createdAt: timestamp,
     };
 

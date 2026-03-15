@@ -41,62 +41,19 @@ export default async function handler(req, res) {
         entities: professorData.entities
           ? JSON.parse(professorData.entities)
           : {},
-        corpus: JSON.parse(professorData.corpus),
         createdAt: professorData.created_at,
       });
       return;
     }
 
     if (req.method === 'PUT') {
-      const { knowledge, entities, corpus } = req.body;
-
-      // Build the corpus from knowledge and entities
-      const corpusObj = {
-        name: 'Corpus',
-        locale: 'en-US',
-      };
-
-      // Add entities if provided
-      if (entities && Object.keys(entities).length > 0) {
-        corpusObj.entities = entities;
-      }
-
-      // Convert YAML knowledge to JSON and add to corpus using js-yaml
-      if (knowledge && knowledge.trim()) {
-        try {
-          const parsed = yaml.load(knowledge);
-          let intents = [];
-          if (Array.isArray(parsed)) {
-            intents = parsed;
-          } else if (parsed && parsed.intent) {
-            intents = [parsed];
-          }
-
-          if (intents.length > 0) {
-            corpusObj.data = intents;
-          }
-        } catch (e) {
-          console.error('Failed to parse YAML knowledge:', e);
-          corpusObj.data = [];
-        }
-      } else {
-        // If no knowledge, keep existing data from corpus if available
-        if (corpus && corpus.data) {
-          corpusObj.data = corpus.data;
-        }
-      }
-
-      // If entities provided separately (not in knowledge), add them
-      if (entities && Object.keys(entities).length > 0 && !corpusObj.entities) {
-        corpusObj.entities = entities;
-      }
+      const { knowledge, entities } = req.body;
 
       // Update corpus in database as JSON string
       await sql`
         UPDATE professors 
         SET knowledge = ${knowledge || null}, 
-            entities = ${entities ? JSON.stringify(entities) : null},
-            corpus = ${JSON.stringify(corpusObj)} 
+            entities = ${entities ? JSON.stringify(entities) : null}
         WHERE id = ${Number(professorId)}
       `;
 
@@ -107,7 +64,6 @@ export default async function handler(req, res) {
         image: professorData.image,
         knowledge,
         entities: entities || {},
-        corpus: corpusObj,
         createdAt: professorData.created_at,
       });
       return;

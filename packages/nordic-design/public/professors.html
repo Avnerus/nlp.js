@@ -259,28 +259,13 @@
           return;
         }
         
-        // Build corpus
-        const corpus = {
-          name: "Corpus",
-          locale: "en-US"
-        };
-        
-        if (Object.keys(entities).length > 0) {
-          corpus.entities = entities;
-        }
-        
-        if (knowledgeJson.data && knowledgeJson.data.length > 0) {
-          corpus.data = knowledgeJson.data;
-        }
-        
         try {
           const response = await fetch(`/api/professors/${professorId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
               knowledge: yamlKnowledge,
-              entities: entities,
-              corpus: corpus
+              entities: entities
             })
           });
           
