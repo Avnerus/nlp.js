@@ -175,7 +175,15 @@
       </div>
     </div>
     
-    <script>
+    <script type="module">
+      import { EditorView, basicSetup } from "codemirror";
+      import { yaml } from "@codemirror/lang-yaml";
+      import { autocompletion } from "@codemirror/autocomplete";
+      import { keymap } from "@codemirror/view";
+      import { indentUnit } from "@codemirror/language";
+      import { Prec } from "@codemirror/state";
+      import { linter, lintGutter } from "@codemirror/lint";
+      import { yamlParser } from "js-yaml";
       const urlParams = new URLSearchParams(window.location.search);
       const professorId = urlParams.get('id') || window.location.pathname.split('/').pop();
       
@@ -242,8 +250,7 @@
         // Use js-yaml to parse YAML to JSON
         let knowledgeJson = { data: [] };
         try {
-          const yaml = await import('js-yaml');
-          const parsed = yaml.load(yamlKnowledge);
+          const parsed = yamlParser.load(yamlKnowledge);
           if (Array.isArray(parsed)) {
             knowledgeJson = { data: parsed };
           } else if (parsed && parsed.intent) {
@@ -313,8 +320,7 @@
         // Use js-yaml to parse YAML to JSON
         let knowledgeJson = { data: [] };
         try {
-          const yaml = await import('js-yaml');
-          const parsed = yaml.load(yamlKnowledge);
+          const parsed = yamlParser.load(yamlKnowledge);
           if (Array.isArray(parsed)) {
             knowledgeJson = { data: parsed };
           } else if (parsed && parsed.intent) {
@@ -368,17 +374,6 @@
           saveBtnText.textContent = 'Save and test';
         }
       });
-    </script>
-
-    <script type="module">
-      import { EditorView, basicSetup } from "codemirror";
-      import { yaml } from "@codemirror/lang-yaml";
-      import { autocompletion } from "@codemirror/autocomplete";
-      import { keymap } from "@codemirror/view";
-      import { indentUnit } from "@codemirror/language";
-      import { Prec } from "@codemirror/state";
-      import { linter, lintGutter } from "@codemirror/lint";
-      import { yamlParser } from "js-yaml";
 
       const smartYamlEnter = ({ state, dispatch }) => {
         const line = state.doc.lineAt(state.selection.main.head);
