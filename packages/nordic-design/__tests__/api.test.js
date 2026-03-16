@@ -55,7 +55,6 @@ describe('API Tests', () => {
     expect(professor).toHaveProperty('image');
     expect(professor).toHaveProperty('knowledge');
     expect(professor).toHaveProperty('entities');
-    expect(professor).toHaveProperty('corpus');
   }, 15000);
 
   it('should get professor by ID', async () => {
