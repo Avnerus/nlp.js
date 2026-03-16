@@ -50,3 +50,13 @@
       opts: "entities.username.option !== 'avner'"
     - answer: "That's great to hear!"
       opts: "entities.username.option !== 'avner'"
+
+# Alvar Aalto buildings - about the most important architectural works
+- intent: agent.aaltosbuildings
+  utterances:
+    - what are the most important buildings Alvar Aalto designed
+  answers:
+    - |
+      Alvar's most famous works of architecture are in Finland. For instance, Paimio Sanatorium close to Turku and Finlandia Hall in Helsinki are considered as international masterpieces.
+      
+      Aalto never really made an international carrier, although he was a professor of MIT in USA during the war time, in 1940's. While at MIT, he designed the iconic Baker House student dormitory.
