@@ -4,6 +4,17 @@ import { neon } from '@neondatabase/serverless';
 const sql = neon(process.env.DATABASE_URL_UNPOOLED);
 
 export default async function handler(req, res) {
+  // Safety check: Only allow init in development mode
+  // This prevents accidental database clearing in production
+  const isDev = process.env.NODE_ENV !== 'production';
+  
+  if (!isDev) {
+    return res.status(403).json({ 
+      error: 'Database initialization is not allowed in production mode',
+      suggestion: 'Use a development environment or local database for testing'
+    });
+  }
+
   // Connect to the Neon database and create table if not exists
   await sql.query('DROP TABLE IF EXISTS "professors"');
   await sql.query(`
