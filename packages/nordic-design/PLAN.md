@@ -373,6 +373,8 @@ await sql`DELETE FROM professors WHERE id = ${Number(id)}`;
 - **Neon SQL syntax** — Use template strings: `await sql\`SELECT * FROM table WHERE id = \${id}\``
 - **YAML format** — Array of intents starting with `- intent:`
 - **Entities** — Optional, advanced users only; leave empty to use template defaults
+- **Corpus** — Not stored in database; built dynamically from knowledge (YAML) + entities (JSON) in `/api/chat`
+- **Vercel dev** — Requires `npx vercel dev` (not `npm run dev`); run `cp /var/run/secrets/ndp-vercel-env .env.development.local` first
 
 ---
 
@@ -410,7 +412,14 @@ npm run test:nlp
 
 **Run dev server for API tests:**
 ```bash
-npm run dev
+# 1. Copy Vercel secrets
+cp /var/run/secrets/ndp-vercel-env .env.development.local
+
+# 2. Start local dev server with Vercel
+npx vercel dev
+
+# 3. Run tests in a separate terminal
+npm test
 ```
 
 ---
@@ -433,9 +442,10 @@ npm run dev
    - Test simple greetings like "hi" or "hello"
    - Verify the professor responds based on the YAML knowledge
 
-4. For local testing, run:
+4. For local testing, start dev server:
    ```bash
-   npm run dev
+   cp /var/run/secrets/ndp-vercel-env .env.development.local
+   npx vercel dev
    ```
    Then open `http://localhost:3000`
 
