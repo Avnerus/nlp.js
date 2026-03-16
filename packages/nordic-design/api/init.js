@@ -137,6 +137,35 @@ export default async function handler(req, res) {
       opts: "entities.username.option !== 'student'"
     - answer: "That's great to hear!"
       opts: "entities.username.option !== 'student'"
+
+# Remember a value in the conversation context
+- intent: user.impatient
+  utterances:
+    - keep your answers short
+    - try to be concise
+  answers:
+    - answer: I already know I should keep it short.
+      opts: "impatient === 'true'"
+    - answer: I'll remember to keep it short next time.
+      opts: "impatient !== 'true'"
+  actions:
+  - name: setContext
+    parameters: [ "impatient", "true" ]
+
+# Increment a value in the conversation context
+- intent: user.agentstupid
+  utterances:
+    - you are stupid
+    - you are not smart
+  answers:
+    - answer: Perhaps you are not asking the right questions.
+      opts: "!saidStupid"
+    - answer: You have said this to me {{saidStupid}} times before.
+      opts: "saidStupid > 0"
+  actions:
+  - name: increment
+    parameters: [ "saidStupid" ]
+
 `;
 
   const knowledgeBlob = await put('knowledge.yaml', knowledgeTemplate, {
