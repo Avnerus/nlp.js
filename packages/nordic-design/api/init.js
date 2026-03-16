@@ -99,6 +99,17 @@ export default async function handler(req, res) {
 # Advanced usage, inferring data entities from the user's text.
 ################################################################
 
+# ELIZA style use of the bodypart entity
+
+- intent: health.complaint
+  utterances:
+    - My @bodypart hurts
+    - I have a pain in my @bodypart
+    - My @bodypart is sore
+  answers:
+    - I'm sorry to hear that your {{bodypart}} hurts. Have you seen a doctor?
+    - Why do you think your {{bodypart}} is bothering you
+
 # Asks for username if not provided
 - intent: greetings.doyouknow
   utterances:
@@ -138,6 +149,9 @@ export default async function handler(req, res) {
   // Upload entities.json template
   const entitiesTemplate = JSON.stringify(
     {
+     bodypart: {
+       regex: "/(?:head|arm|leg|stomach|back)/gi"
+      },
       username: {
         trim: [
           {
@@ -149,7 +163,7 @@ export default async function handler(req, res) {
         options: {
           student: ['Student'],
         },
-      },
+      }
     },
     null,
     2
