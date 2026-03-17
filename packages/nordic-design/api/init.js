@@ -14,7 +14,6 @@ export default async function handler(req, res) {
       suggestion: 'Use a development environment or local database for testing'
     });
   }
-
   // Connect to the Neon database and create table if not exists
   await sql.query('DROP TABLE IF EXISTS "professors"');
   await sql.query(`
@@ -30,34 +29,44 @@ export default async function handler(req, res) {
    `);
 
   // Upload knowledge.yaml template with comments
-  const knowledgeTemplate = `# Knowledge YAML Template
-# This file defines the chatbot's knowledge using a simple YAML format.
+  const knowledgeTemplate = `##########################################################
+# KNOWLEDGE YAML TEMPLATE
+##########################################################
 
-# We use a Natural Language Processing library (https://github.com/axa-group/nlp.js). It uses Levenshtein distance (https://en.wikipedia.org/wiki/Levenshtein_distance) to find the closest match between what the user wrote and available utterances to find the user intent.
-
-# Each intent starts with "- intent:" with a name for the intent and followed by its utterances and answers.
-
-# Here is an example of "intents", "utterances" (=questions) and "answers" where the user wants to know about "Alvar Aalto".
+# This file tells your chatbot:
+#   - what topics it knows (intents)
+#   - how people might ask about them (utterances)
+#   - what it should answer (answers)
+#
+# HOW TO USE THIS FILE
+# 1) Copy the example block below.
+# 2) Change the intent name (after "intent:") to your own topic.
+# 3) Replace the utterances with example questions users might ask.
+# 4) Replace the answers with the replies you want the bot to give. It chooses the answers randomly from the list.
+#
+# The project uses a Natural Language Processing library (https://github.com/axa-group/nlp.js). It calculates a Levenshtein distance (https://en.wikipedia.org/wiki/Levenshtein_distance) to find the closest match between what the user wrote and available utterances to find the user intent.
+#
+# You can create one such block for each topic your bot should know.
+# You may copy-paste this and edit.
 
 - intent: know.alvaraalto
-# These are the questions (question mark not needed):
   utterances:
     - who is Alvar Aalto
     - do you know Alvar Aalto
-# The answer is choosen randomly from these:
   answers:
-    - Alvar Aalto was a Finnish architect and designer. One of the greatest modernists and also known for his furniture design.
-    - Alvar Aalto founded the furniture company Artek. The company still exists and manufactures and sells original works designed by Aalto.
+    - Alvar Aalto was a Finnish architect and designer, known as one of the greatest modernists and for his furniture design.
+    - Alvar Aalto founded the furniture company Artek, which still manufactures and sells many of his original designs.
 
-# You may copy and edit the text above to create more "intents", "utterances" (=questions) and "answers". Rembmer to name your intents and start each intent with a dash and space!
 
 # Here is an example of an answer with multiple lines / paragaphs. It should start with the symbol "|", followed be each line starting at the same column.
+
 - intent: agent.aaltosbuildings
   utterances:
     - what are the most important buildings Alvar Aalto designed
   answers: 
     - |
       Alvar's most famous works of architecture are in Finland. For instance, Paimio Sanatorium close to Turku and FInlandia Hall in Helsinki are considered as international master pieces.
+
       Aalto never really made an international carrier, although he was a professor of MIT in USA during the war time, in 1940's. While at MIT, he designed the iconic Baker House student dormitory.
 
 
@@ -109,6 +118,7 @@ export default async function handler(req, res) {
 ################################################################
 # Advanced usage, inferring data entities from the user's text.
 ################################################################
+# These examles use the "Entity" JSON definition file. It matches the user's text with specific patterns to fill in data entities for the conversation context. Check the Entities JSON section on the edit page.
 
 # ELIZA style use of the bodypart entity
 
