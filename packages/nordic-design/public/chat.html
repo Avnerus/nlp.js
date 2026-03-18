@@ -56,6 +56,10 @@
         border: 1px solid #e2e8f0;
         white-space: pre-wrap;
       }
+      .chat-bubble-bot a { 
+        text-decoration: underline;
+        color: blue;
+      }
       /* Edit link styles - match professors page button style */
       .edit-corpus-link {
         background: linear-gradient(135deg, #10b981 0%, #059669 100%);
@@ -80,6 +84,13 @@
         vertical-align: middle;
       }
     </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "marked": "./vendor.bundle.js"
+        }
+      }
+    </script>
   </head>
   <body class="min-h-screen flex flex-col">
     <!-- Header -->
@@ -156,7 +167,9 @@
       </div>
     </div>
     
-    <script>
+    <script type="module">
+      import { marked } from 'marked';
+
       const urlParams = new URLSearchParams(window.location.search);
       const professorId = urlParams.get('id') || window.location.pathname.split('/').pop();
       let context = {};
@@ -235,7 +248,11 @@
         messageDiv.className = `max-w-[85%] px-6 py-4 rounded-2xl chat-bubble-${sender} mb-4 ${
           sender === 'user' ? 'ml-auto' : 'mr-auto'
         }`;
-        messageDiv.textContent = text;
+        const botHtml = marked.parse(text, {
+          breaks: true,
+          gfm: true 
+        });
+        messageDiv.innerHTML = botHtml.trim();
         messagesDiv.appendChild(messageDiv);
         scrollToBottom();
       }
