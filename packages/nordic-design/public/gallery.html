@@ -79,7 +79,7 @@
           }
           
           container.innerHTML = professors.map(p => `
-            <a href="/chat.html?id=${p.id}" class="nordic-card overflow-hidden group block">
+            <a href="/chat.html?id=${p.id}&mode=gallery" class="nordic-card overflow-hidden group block">
               <div class="h-64 overflow-hidden relative">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent z-10"></div>
                 <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
