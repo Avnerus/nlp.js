@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nordic Design Professor Chat Bots</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      body { 
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+      }
+      .nordic-blue { color: #1e3a8a; }
+      .nordic-accent { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+      .nordic-accent:hover { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); }
+      .nordic-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+        border: 1px solid rgba(0,0,0,0.05);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .nordic-card:hover {
+        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+        transform: translateY(-4px);
+      }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <!-- Header -->
+      <header class="text-center mb-16">
+        <div class="inline-flex items-center justify-center p-4 bg-blue-50 rounded-full mb-6">
+          <svg class="w-12 h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+          </svg>
+        </div>
+        <h1 class="text-5xl font-bold nordic-blue mb-6 tracking-tight">Nordic Design Professor Chat Bots</h1>
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed mb-8">
+          Created by the students of the MEDes programme
+        </p>
+        <p class="text-lg text-gray-500 max-w-xl mx-auto font-medium">
+          Select a professor to start chatting
+        </p>
+      </header>
+      
+      <!-- Professor Gallery -->
+      <div class="nordic-card p-10">
+        <div id="professorsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div class="col-span-full text-center py-16">
+            <div class="w-24 h-24 bg-gray-100 rounded-full mx-auto mb-6 flex items-center justify-center">
+              ...
+            </div>
+            <p class="text-gray-500 text-lg">No professors yet. Check back later!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <script>
+      async function loadProfessors() {
+        try {
+          const response = await fetch('/api/professors');
+          const professors = await response.json();
+          
+          const container = document.getElementById('professorsGrid');
+          if (professors.length === 0) {
+            container.innerHTML = `
+              <div class="col-span-full text-center py-16">
+                <div class="w-24 h-24 bg-gray-100 rounded-full mx-auto mb-6 flex items-center justify-center">
+                  ...
+                </div>
+                <p class="text-gray-500 text-lg">No professors yet. Check back later!</p>
+              </div>`;
+            return;
+          }
+          
+          container.innerHTML = professors.map(p => `
+            <a href="/chat.html?id=${p.id}" class="nordic-card overflow-hidden group block">
+              <div class="h-64 overflow-hidden relative">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent z-10"></div>
+                <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+              </div>
+              <div class="p-8">
+                <h3 class="text-2xl font-bold nordic-blue mb-2">${p.name}</h3>
+                <p class="text-gray-600 text-lg mb-6">${p.field}</p>
+                <div class="flex items-center gap-2 text-blue-600 font-semibold group-hover:gap-3 transition-all">
+                  <span>Start Chatting</span>
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                  </svg>
+                </div>
+              </div>
+            </a>
+          `).join('');
+        } catch (err) {
+          console.error('Failed to load professors:', err);
+        }
+      }
+      
+      loadProfessors();
+    </script>
+  </body>
+</html>
