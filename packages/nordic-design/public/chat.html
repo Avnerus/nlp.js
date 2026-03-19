@@ -84,6 +84,13 @@
         vertical-align: middle;
       }
     </style>
+    <script>
+      // Hide edit container by default if mode=gallery
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('mode') === 'gallery') {
+        document.write('<style>#editContainer { display: none !important; }</style>');
+      }
+    </script>
     <script type="importmap">
       {
         "imports": {
