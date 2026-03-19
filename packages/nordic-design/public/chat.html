@@ -194,6 +194,8 @@
           const mode = urlParams.get('mode');
           if (mode === 'gallery') {
             document.getElementById('editContainer').style.display = 'none';
+            // Change home link to go to gallery instead of index
+            document.querySelector('header a[href="/"]').href = '/gallery.html';
           }
         } catch (err) {
           console.error('Failed to load professor:', err);
